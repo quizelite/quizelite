@@ -37,7 +37,20 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 button, select, a { -webkit-tap-highlight-color: transparent; }
-.btn, .diff-btn, .answer-btn, .select, .chip-icon { touch-action: manipulation; }
+.btn, .diff-btn, .answer-btn, .select, .chip-icon { touch-action: manipulation; position: relative; overflow: hidden; }
+
+/* Liquid click ripple */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: scale(0);
+  animation: rippleGrow 0.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes rippleGrow {
+  to { transform: scale(1); opacity: 0; }
+}
 
 body {
   font-family: "Inter", system-ui, sans-serif;
@@ -63,27 +76,35 @@ body {
 }
 .blobs span {
   position: absolute;
-  border-radius: 50%;
   filter: blur(90px);
-  will-change: transform;
+  will-change: transform, border-radius;
 }
 .blobs span:nth-child(1) {
   width: 50vmax; height: 44vmax;
   top: -16vmax; left: -12vmax;
   background: var(--blob1);
-  animation: drift1 14s ease-in-out infinite alternate;
+  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+  animation: drift1 14s ease-in-out infinite alternate, morph 11s ease-in-out infinite alternate;
 }
 .blobs span:nth-child(2) {
   width: 40vmax; height: 36vmax;
   bottom: -14vmax; right: -10vmax;
   background: var(--blob2);
-  animation: drift2 17s ease-in-out infinite alternate;
+  border-radius: 45% 55% 40% 60% / 60% 45% 55% 40%;
+  animation: drift2 17s ease-in-out infinite alternate, morph 13s ease-in-out infinite alternate-reverse;
 }
 .blobs span:nth-child(3) {
   width: 32vmax; height: 32vmax;
   top: 38%; left: 52%;
   background: var(--blob3);
-  animation: drift3 20s ease-in-out infinite alternate;
+  border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
+  animation: drift3 20s ease-in-out infinite alternate, morph 9s ease-in-out infinite alternate;
+}
+@keyframes morph {
+  0%   { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
+  33%  { border-radius: 35% 65% 30% 70% / 70% 35% 65% 30%; }
+  66%  { border-radius: 70% 30% 65% 35% / 35% 70% 30% 65%; }
+  100% { border-radius: 50% 50% 45% 55% / 55% 45% 60% 40%; }
 }
 @keyframes drift1 {
   0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
@@ -208,7 +229,13 @@ main { padding: 44px 0 64px; flex: 1; }
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     inset 0 -1px 0 rgba(255, 255, 255, 0.12);
   overflow: hidden;
-  animation: bootIn 0.45s ease both;
+  animation: bootIn 0.45s ease both, liquidFloat 6s ease-in-out 0.5s infinite;
+}
+@keyframes liquidFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%      { transform: translateY(-5px) rotate(0.25deg); }
+  66%      { transform: translateY(3px) rotate(-0.2deg); }
+}
 }
 .card > * { position: relative; z-index: 1; }
 .hidden { display: none !important; }

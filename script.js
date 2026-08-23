@@ -334,6 +334,23 @@
     });
   });
 
+  // Liquid ripple on click for buttons and answers
+  document.addEventListener("pointerdown", function (e) {
+    var btn = e.target.closest(".btn, .diff-btn, .answer-btn, .chip-icon");
+    if (!btn) return;
+    var r = btn.getBoundingClientRect();
+    var size = Math.max(r.width, r.height) * 2.2;
+    var ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = (e.clientX - r.left - size / 2) + "px";
+    ripple.style.top = (e.clientY - r.top - size / 2) + "px";
+    btn.appendChild(ripple);
+    ripple.addEventListener("animationend", function () {
+      ripple.remove();
+    });
+  });
+
   // Init
   // Place the correct answer at a random position in each question (once at startup)
   QUESTIONS.forEach(function (q) {
