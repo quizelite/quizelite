@@ -12,6 +12,10 @@
     document.querySelectorAll(".diff-btn")
   );
   var countInfo = document.getElementById("question-count-info");
+  var startBtn = document.getElementById("start-btn");
+  var chipIcons = Array.prototype.slice.call(
+    document.querySelectorAll(".chip-icon")
+  );
 
   var quizCategory = document.getElementById("quiz-category");
   var quizProgress = document.getElementById("quiz-progress");
@@ -93,10 +97,23 @@
     if (n === 0) {
       countInfo.textContent =
         "No questions available for this combination — try another difficulty.";
+      startBtn.disabled = true;
     } else {
       countInfo.textContent =
         n + " questions available · " + Math.min(QUESTIONS_PER_QUIZ, n) + " will be picked.";
+      startBtn.disabled = false;
     }
+    syncChipSelection();
+  }
+
+  function syncChipSelection() {
+    chipIcons.forEach(function (chip) {
+      if (chip.dataset.category === state.category) {
+        chip.classList.add("selected");
+      } else {
+        chip.classList.remove("selected");
+      }
+    });
   }
 
   function show(screen) {
@@ -257,6 +274,43 @@
   categorySelect.addEventListener("change", function () {
     state.category = categorySelect.value;
     updateCountInfo();
+  });
+
+  // Category icon chips: click selects the category
+  chipIcons.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      categorySelect.value = chip.dataset.category;
+      state.category = chip.dataset.category;
+      updateCountInfo();
+    });
+  });
+
+  // Keyboard controls
+  document.addEventListener("keydown", function (e) {
+    var quizVisible = !quizScreen.classList.contains("hidden");
+    var resultsVisible = !resultsScreen.classList.contains("hidden");
+
+    if (quizVisible && !state.answered) {
+      var keyMap = { a: 0, b: 1, c: 2, d: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+      var idx = keyMap[e.key.toLowerCase()];
+      if (idx !== undefined) {
+        var btns = answersEl.querySelectorAll(".answer-btn:not(:disabled)");
+        if (btns[idx]) btns[idx].click();
+        return;
+      }
+    }
+
+    if (quizVisible && state.answered) {
+      if (e.key === "Enter" || e.key.toLowerCase() === "n" || e.key === " ") {
+        e.preventDefault();
+        next();
+      }
+      return;
+    }
+
+    if (resultsVisible && e.key.toLowerCase() === "r") {
+      startQuiz();
+    }
   });
 
   // Robot mascot: wave on click

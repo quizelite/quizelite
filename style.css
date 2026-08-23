@@ -203,6 +203,12 @@ h2 {
   color: var(--accent);
   opacity: 0;
   animation: iconPop 0.4s ease forwards;
+  font: inherit;
+  padding: 0;
+}
+.chip-icon.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.45), inset 0 0 10px rgba(0, 229, 255, 0.12);
 }
 .chip-icon svg { width: 24px; height: 24px; }
 .chip-icon:nth-child(1) { animation-delay: 0.15s; }
