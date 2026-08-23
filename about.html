@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — HardwareQuiz</title>
+  <meta name="description" content="Learn more about HardwareQuiz, a free site for testing your PC hardware knowledge." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="./" class="logo"><span class="logo-icon">🖥️</span> Hardware<span class="accent">Quiz</span></a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="about.html">About</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>About HardwareQuiz</h1>
+      <p class="subtitle">Free, simple and fun computer hardware quizzes — no sign-up, no downloads.</p>
+
+      <p>HardwareQuiz was created to help students, builders and tech enthusiasts test and improve their knowledge of PC hardware: CPUs, RAM, storage, GPUs, motherboards, power supplies and peripherals.</p>
+      <br />
+      <p><strong>Why use HardwareQuiz?</strong></p>
+      <ul style="margin: 10px 0 0 22px; color: var(--text-dim);">
+        <li>100% free quizzes with instant scoring</li>
+        <li>Multiple categories and difficulty levels</li>
+        <li>Questions written to reflect real-world hardware concepts</li>
+        <li>New questions added regularly</li>
+      </ul>
+      <br />
+      <p>Have a suggestion or found a bug in a question? Reach out through our <a href="contact.html" style="color: var(--accent);">contact page</a>.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> HardwareQuiz — Free PC hardware knowledge tests.</p>
+      <nav class="footer-nav">
+        <a href="about.html">About</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

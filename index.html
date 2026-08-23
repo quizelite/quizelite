@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HardwareQuiz — Test Your PC Hardware Knowledge</title>
+  <meta name="description" content="Free computer hardware quizzes. Test your knowledge of CPUs, GPUs, RAM, storage, motherboards and more. Multiple difficulty levels and instant scoring." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="./" class="logo"><span class="logo-icon">🖥️</span> Hardware<span class="accent">Quiz</span></a>
+      <nav class="nav">
+        <a href="./">Home</a>
+        <a href="about.html">About</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Start screen -->
+    <section id="start-screen" class="screen card">
+      <h1>How well do you know <span class="accent">PC hardware</span>?</h1>
+      <p class="subtitle">Pick a category and difficulty, then answer as many questions as you can. Instant scoring, no sign-up needed.</p>
+
+      <div class="picker-group">
+        <label class="picker-label" for="category-select">Category</label>
+        <select id="category-select" class="select"></select>
+      </div>
+
+      <div class="picker-group">
+        <span class="picker-label">Difficulty</span>
+        <div class="difficulty-toggle" id="difficulty-toggle">
+          <button class="diff-btn active" data-difficulty="easy">Easy</button>
+          <button class="diff-btn" data-difficulty="medium">Medium</button>
+          <button class="diff-btn" data-difficulty="hard">Hard</button>
+          <button class="diff-btn" data-difficulty="mixed">Mixed</button>
+        </div>
+      </div>
+
+      <p id="question-count-info" class="count-info"></p>
+
+      <button id="start-btn" class="btn btn-primary btn-lg">Start Quiz →</button>
+    </section>
+
+    <!-- Quiz screen -->
+    <section id="quiz-screen" class="screen card hidden">
+      <div class="quiz-meta">
+        <span id="quiz-category" class="badge"></span>
+        <span id="quiz-progress" class="progress-text"></span>
+        <span id="quiz-score" class="score-text">Score: 0</span>
+      </div>
+      <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+
+      <h2 id="question-text" class="question-text"></h2>
+      <div id="answers" class="answers"></div>
+
+      <div id="feedback" class="feedback hidden"></div>
+
+      <button id="next-btn" class="btn btn-primary hidden">Next Question →</button>
+    </section>
+
+    <!-- Results screen -->
+    <section id="results-screen" class="screen card hidden">
+      <div id="result-emoji" class="result-emoji">🎉</div>
+      <h2 id="result-title" class="result-title"></h2>
+      <p id="result-message" class="result-message"></p>
+
+      <div class="result-stats">
+        <div class="stat">
+          <span id="stat-score" class="stat-value">0</span>
+          <span class="stat-label">Score</span>
+        </div>
+        <div class="stat">
+          <span id="stat-correct" class="stat-value">0/0</span>
+          <span class="stat-label">Correct</span>
+        </div>
+        <div class="stat">
+          <span id="stat-percent" class="stat-value">0%</span>
+          <span class="stat-label">Accuracy</span>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button id="retry-btn" class="btn btn-primary">Try Again</button>
+        <button id="home-btn" class="btn btn-secondary">Choose Another Category</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> HardwareQuiz — Free PC hardware knowledge tests.</p>
+      <nav class="footer-nav">
+        <a href="about.html">About</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
