@@ -15,6 +15,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Móvil: sin highlight azul al tocar y sin zoom por doble toque en botones */
+button, select, a { -webkit-tap-highlight-color: transparent; }
+.btn, .diff-btn, .answer-btn, .select, .chip-icon { touch-action: manipulation; }
+
 body {
   font-family: "JetBrains Mono", "Inter", system-ui, sans-serif;
   background:
@@ -480,10 +484,59 @@ h2 {
 .stat-label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; }
 .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-@media (max-width: 520px) {
-  .difficulty-toggle { grid-template-columns: repeat(2, 1fr); }
-  .quiz-meta { flex-wrap: wrap; }
+@media (max-width: 600px) {
+  main { padding: 26px 0 44px; }
+
+  /* Header compacto */
+  .header-inner { flex-direction: column; gap: 8px; padding: 10px 0; }
+  .logo { font-size: 1rem; }
+  .nav a { margin: 0 8px; font-size: 0.78rem; }
+
+  /* Targets táctiles ≥44px */
+  .btn-lg { padding: 15px; }
+  .diff-btn { min-height: 46px; }
+  .answer-btn { min-height: 52px; padding: 12px 14px; gap: 10px; font-size: 0.92rem; }
+  .select { min-height: 48px; }
+  .chip-icon { width: 46px; height: 46px; }
+  .feedback { font-size: 0.88rem; }
+
+  /* Quiz meta sin desbordes */
+  .quiz-meta { row-gap: 6px; font-size: 0.82rem; }
+  .badge { white-space: nowrap; }
+
+  /* Resultados apilados */
+  .result-stats { gap: 8px; }
+  .stat { padding: 13px 6px; }
+  .stat-value { font-size: 1.2rem; }
+  .result-actions { flex-direction: column; }
   .result-actions .btn { width: 100%; }
+
+  /* Robot más discreto */
+  .robot-svg { width: clamp(110px, 30vw, 150px); }
+}
+
+@media (max-width: 380px) {
+  .difficulty-toggle { grid-template-columns: repeat(2, 1fr); }
+  .cat-icons { gap: 7px; }
+  .chip-icon { width: 42px; height: 42px; border-radius: 8px; }
+  .question-text { font-size: 1.02rem; }
+  h1 { font-size: 1.3rem; }
+}
+
+/* Móviles con notch */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .footer {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Accesibilidad: menos movimiento si el sistema lo pide */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ===== Keyframes ===== */
