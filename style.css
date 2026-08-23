@@ -135,6 +135,51 @@ h2 {
 }
 .subtitle { color: var(--text-dim); margin-bottom: 28px; }
 
+/* ===== Robot mascot ===== */
+.mascot {
+  display: flex;
+  justify-content: center;
+  margin: -6px 0 14px;
+}
+.robot-svg {
+  width: clamp(130px, 24vw, 190px);
+  filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.35));
+  animation: floatBot 3s ease-in-out infinite;
+}
+.mascot-sm .robot-svg { width: clamp(90px, 16vw, 120px); }
+
+/* ===== Category icons ===== */
+.cat-icons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+.chip-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--accent);
+  opacity: 0;
+  animation: iconPop 0.4s ease forwards;
+}
+.chip-icon svg { width: 24px; height: 24px; }
+.chip-icon:nth-child(1) { animation-delay: 0.15s; }
+.chip-icon:nth-child(2) { animation-delay: 0.25s; }
+.chip-icon:nth-child(3) { animation-delay: 0.35s; }
+.chip-icon:nth-child(4) { animation-delay: 0.45s; }
+.chip-icon:nth-child(5) { animation-delay: 0.55s; }
+.chip-icon:nth-child(6) { animation-delay: 0.65s; }
+.chip-icon:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+}
+
 /* ===== Pickers ===== */
 .picker-group { margin-bottom: 22px; }
 .picker-label {
@@ -434,4 +479,12 @@ h2 {
 @keyframes botBounce {
   from { transform: translateY(0) rotate(-3deg); }
   to { transform: translateY(-12px) rotate(3deg); }
+}
+@keyframes floatBot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes iconPop {
+  from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
 }
