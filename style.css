@@ -225,7 +225,7 @@ main { padding: 44px 0 64px; flex: 1; }
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
-.card:hover::after { opacity: 1; }
+.card:hover::before { opacity: 1; }
 .card > * { position: relative; z-index: 1; }
 .hidden { display: none !important; }
 
