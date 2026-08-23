@@ -131,7 +131,7 @@ body {
 }
 .logo-icon { margin-right: 6px; display: inline-block; }
 .accent {
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  background: var(--accent);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -321,7 +321,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 .chip-icon:nth-child(6) { animation-delay: 0.65s; }
 .chip-icon:hover { transform: translateY(-3px); }
 .chip-icon.selected {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: var(--accent);
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 8px 22px rgba(91, 108, 255, 0.45);
@@ -379,9 +379,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 }
 .diff-btn:hover { transform: translateY(-2px); }
 .diff-btn.active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
-  border-color: transparent;
+  background: var(--accent);`n  color: #fff;`n  border-color: transparent;
   box-shadow: 0 6px 20px rgba(91, 108, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -400,9 +398,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
   transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
-  border-color: transparent;
+  background: var(--accent);`n  color: #fff;`n  border-color: transparent;
   box-shadow: 0 8px 24px rgba(91, 108, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .btn-primary:hover { filter: brightness(1.08); transform: translateY(-2px); }
@@ -431,7 +427,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
   font-size: 0.88rem;
 }
 .badge {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: var(--accent);
   color: #fff;
   border-radius: 999px;
   padding: 4px 14px;
@@ -454,7 +450,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  background: var(--accent);
   border-radius: 999px;
   box-shadow: 0 0 12px rgba(123, 138, 255, 0.6);
   transition: width 0.35s ease;
@@ -569,7 +565,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: var(--accent);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
