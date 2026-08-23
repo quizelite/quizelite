@@ -530,15 +530,6 @@ h2 {
   }
 }
 
-/* Accesibilidad: menos movimiento si el sistema lo pide */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /* ===== Keyframes ===== */
 @keyframes bootIn {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
