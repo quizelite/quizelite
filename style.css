@@ -137,6 +137,7 @@ h2 {
 
 /* ===== Robot mascot ===== */
 .mascot {
+  position: relative;
   display: flex;
   justify-content: center;
   margin: -6px 0 14px;
@@ -145,8 +146,43 @@ h2 {
   width: clamp(130px, 24vw, 190px);
   filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.35));
   animation: floatBot 3s ease-in-out infinite;
+  cursor: pointer;
 }
 .mascot-sm .robot-svg { width: clamp(90px, 16vw, 120px); }
+
+/* waving state */
+.robot-svg .arm-r {
+  transform-box: view-box;
+  transform-origin: 167px 146px;
+}
+.robot-svg.waving { animation: floatBot 3s ease-in-out infinite, happyJump 0.95s ease; }
+.robot-svg.waving .arm-r { animation: waveArm 0.95s ease; }
+
+/* speech bubble on wave */
+.bubble {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--bg-panel);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: "Orbitron", monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.35);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 2;
+}
+.mascot.waving .bubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1.05);
+}
 
 /* ===== Category icons ===== */
 .cat-icons {
@@ -487,4 +523,17 @@ h2 {
 @keyframes iconPop {
   from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
   to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes waveArm {
+  0% { transform: rotate(0); }
+  20% { transform: rotate(-135deg); }
+  38% { transform: rotate(-100deg); }
+  52% { transform: rotate(-140deg); }
+  66% { transform: rotate(-105deg); }
+  80% { transform: rotate(-138deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes happyJump {
+  0%, 100% { margin-top: 0; }
+  40% { margin-top: -14px; }
 }

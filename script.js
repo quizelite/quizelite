@@ -259,6 +259,20 @@
     updateCountInfo();
   });
 
+  // Robot mascot: wave on click
+  document.querySelectorAll(".mascot").forEach(function (mascot) {
+    mascot.addEventListener("click", function () {
+      if (mascot.classList.contains("waving")) return;
+      var svg = mascot.querySelector(".robot-svg");
+      mascot.classList.add("waving");
+      svg.classList.add("waving");
+      setTimeout(function () {
+        mascot.classList.remove("waving");
+        svg.classList.remove("waving");
+      }, 1000);
+    });
+  });
+
   // Init
   // Place the correct answer at a random position in each question (once at startup)
   QUESTIONS.forEach(function (q) {
