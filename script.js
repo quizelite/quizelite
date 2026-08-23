@@ -313,6 +313,13 @@
     }
   });
 
+  // Logo "QuizElite": back to the quiz start screen (same page, no reload)
+  document.querySelector(".logo").addEventListener("click", function (e) {
+    e.preventDefault();
+    show(startScreen);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
   // Robot mascot: wave on click
   document.querySelectorAll(".mascot").forEach(function (mascot) {
     mascot.addEventListener("click", function () {
