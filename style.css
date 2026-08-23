@@ -1,20 +1,20 @@
 /* QuizElite — liquid glass theme (light / dark) */
 
 :root {
-  --glass: rgba(255, 255, 255, 0.55);
-  --glass-strong: rgba(255, 255, 255, 0.75);
-  --glass-soft: rgba(255, 255, 255, 0.35);
-  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass: rgba(255, 255, 255, 0.48);
+  --glass-strong: rgba(255, 255, 255, 0.8);
+  --glass-soft: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(120, 130, 255, 0.35);
   --ink: #1a1d29;
   --ink-dim: rgba(26, 29, 41, 0.62);
   --accent: #5b6cff;
   --accent-2: #9b5bff;
   --correct: #12a150;
   --wrong: #e4485c;
-  --shadow: rgba(31, 38, 135, 0.18);
-  --blob1: rgba(120, 140, 255, 0.55);
-  --blob2: rgba(255, 150, 210, 0.5);
-  --blob3: rgba(100, 220, 255, 0.5);
+  --shadow: rgba(80, 90, 200, 0.25);
+  --blob1: rgba(110, 130, 255, 0.65);
+  --blob2: rgba(255, 140, 205, 0.6);
+  --blob3: rgba(80, 215, 255, 0.6);
 }
 
 [data-theme="dark"] {
@@ -56,7 +56,7 @@ button, select, a { -webkit-tap-highlight-color: transparent; }
 
 body {
   font-family: "Inter", system-ui, sans-serif;
-  background: linear-gradient(160deg, #eef1ff 0%, #fdf3f8 50%, #ecfaff 100%);
+  background: linear-gradient(160deg, #dfe4ff 0%, #ffe9f5 50%, #d9f6ff 100%);
   color: var(--ink);
   min-height: 100vh;
   display: flex;
