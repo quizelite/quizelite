@@ -1,4 +1,4 @@
-# HardwareQuiz 🖥️
+# QuizElite 🤖
 
 Free computer hardware quiz website built with plain HTML/CSS/JavaScript. No build step, no frameworks.
 
