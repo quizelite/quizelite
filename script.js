@@ -139,6 +139,13 @@
     feedback.classList.add("hidden");
     nextBtn.classList.add("hidden");
 
+    // Shuffle answer order so the correct one isn't always in the same spot
+    var indices = shuffle([0, 1, 2, 3]);
+    q.answers = indices.map(function (origIdx) {
+      return q.answers[origIdx];
+    });
+    q.correct = indices.indexOf(q.correct);
+
     q.answers.forEach(function (text, i) {
       var btn = document.createElement("button");
       btn.className = "answer-btn";
