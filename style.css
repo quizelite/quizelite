@@ -12,9 +12,9 @@
   --correct: #12a150;
   --wrong: #e4485c;
   --shadow: rgba(31, 38, 135, 0.18);
-  --blob1: rgba(120, 140, 255, 0.45);
-  --blob2: rgba(255, 170, 220, 0.4);
-  --blob3: rgba(120, 230, 255, 0.4);
+  --blob1: rgba(120, 140, 255, 0.55);
+  --blob2: rgba(255, 150, 210, 0.5);
+  --blob3: rgba(100, 220, 255, 0.5);
 }
 
 [data-theme="dark"] {
@@ -29,9 +29,9 @@
   --correct: #3ddc84;
   --wrong: #ff6b7d;
   --shadow: rgba(0, 0, 0, 0.45);
-  --blob1: rgba(70, 90, 255, 0.35);
-  --blob2: rgba(200, 60, 180, 0.25);
-  --blob3: rgba(40, 190, 230, 0.28);
+  --blob1: rgba(70, 90, 255, 0.5);
+  --blob2: rgba(200, 60, 180, 0.4);
+  --blob3: rgba(40, 190, 230, 0.45);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,11 +43,13 @@ button, select, a { -webkit-tap-highlight-color: transparent; }
 .ripple {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+  background: radial-gradient(circle, var(--ripple-color) 0%, transparent 70%);
   transform: scale(0);
   animation: rippleGrow 0.6s ease-out forwards;
   pointer-events: none;
 }
+:root { --ripple-color: rgba(91, 108, 255, 0.45); }
+[data-theme="dark"] { --ripple-color: rgba(255, 255, 255, 0.4); }
 @keyframes rippleGrow {
   to { transform: scale(1); opacity: 0; }
 }
@@ -76,7 +78,7 @@ body {
 }
 .blobs span {
   position: absolute;
-  filter: blur(90px);
+  filter: blur(65px);
   will-change: transform, border-radius;
 }
 .blobs span:nth-child(1) {
