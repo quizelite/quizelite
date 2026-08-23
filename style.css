@@ -210,25 +210,8 @@ main { padding: 44px 0 64px; flex: 1; }
   overflow: hidden;
   animation: bootIn 0.45s ease both;
 }
-/* rotating liquid sheen along the border */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: -60%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(255, 255, 255, 0.35) 40deg,
-    transparent 90deg,
-    transparent 180deg,
-    rgba(123, 138, 255, 0.25) 230deg,
-    transparent 290deg
-  );
-  animation: liquidSpin 9s linear infinite;
-  pointer-events: none;
-}
 /* specular highlight that follows the pointer */
-.card::after {
+.card::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -633,10 +616,6 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes bootIn {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes liquidSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 @keyframes typeIn {
   from { opacity: 0; transform: translateY(8px); }
