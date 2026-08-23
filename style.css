@@ -64,29 +64,42 @@ body {
 .blobs span {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  animation: drift 18s ease-in-out infinite alternate;
+  filter: blur(90px);
+  will-change: transform;
 }
 .blobs span:nth-child(1) {
-  width: 46vmax; height: 46vmax;
-  top: -14vmax; left: -10vmax;
+  width: 50vmax; height: 44vmax;
+  top: -16vmax; left: -12vmax;
   background: var(--blob1);
+  animation: drift1 14s ease-in-out infinite alternate;
 }
 .blobs span:nth-child(2) {
-  width: 36vmax; height: 36vmax;
-  bottom: -12vmax; right: -8vmax;
+  width: 40vmax; height: 36vmax;
+  bottom: -14vmax; right: -10vmax;
   background: var(--blob2);
-  animation-delay: -6s;
+  animation: drift2 17s ease-in-out infinite alternate;
 }
 .blobs span:nth-child(3) {
-  width: 30vmax; height: 30vmax;
-  top: 40%; left: 55%;
+  width: 32vmax; height: 32vmax;
+  top: 38%; left: 52%;
   background: var(--blob3);
-  animation-delay: -12s;
+  animation: drift3 20s ease-in-out infinite alternate;
 }
-@keyframes drift {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(4vmax, -3vmax) scale(1.12); }
+@keyframes drift1 {
+  0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate(6vmax, 4vmax) scale(1.18) rotate(18deg); }
+  100% { transform: translate(-3vmax, 7vmax) scale(0.94) rotate(-10deg); }
+}
+@keyframes drift2 {
+  0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate(-5vmax, -6vmax) scale(1.22) rotate(-16deg); }
+  100% { transform: translate(4vmax, -2vmax) scale(0.9) rotate(12deg); }
+}
+@keyframes drift3 {
+  0%   { transform: translate(0, 0) scale(0.95); }
+  33%  { transform: translate(-8vmax, -4vmax) scale(1.25); }
+  66%  { transform: translate(5vmax, 5vmax) scale(1.05); }
+  100% { transform: translate(0, 0) scale(0.95); }
 }
 
 .container { width: min(760px, 92%); margin: 0 auto; }
@@ -154,6 +167,11 @@ body {
 }
 .theme-toggle:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 24px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.5); }
 .theme-toggle:active { transform: scale(0.94); }
+.theme-toggle.spin { animation: toggleSpin 0.45s ease; }
+@keyframes toggleSpin {
+  from { transform: rotate(-180deg) scale(0.6); opacity: 0.4; }
+  to { transform: rotate(0deg) scale(1); opacity: 1; }
+}
 
 .footer {
   border-top: 1px solid var(--glass-border);
@@ -178,9 +196,10 @@ body {
 /* ===== Screens ===== */
 main { padding: 44px 0 64px; flex: 1; }
 .card {
+  position: relative;
   background: var(--glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
   border: 1px solid var(--glass-border);
   border-radius: 28px;
   padding: clamp(24px, 5vw, 44px);
@@ -188,8 +207,43 @@ main { padding: 44px 0 64px; flex: 1; }
     0 8px 32px var(--shadow),
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+  overflow: hidden;
   animation: bootIn 0.45s ease both;
 }
+/* rotating liquid sheen along the border */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.35) 40deg,
+    transparent 90deg,
+    transparent 180deg,
+    rgba(123, 138, 255, 0.25) 230deg,
+    transparent 290deg
+  );
+  animation: liquidSpin 9s linear infinite;
+  pointer-events: none;
+}
+/* specular highlight that follows the pointer */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    520px circle at var(--mx, 50%) var(--my, 20%),
+    rgba(255, 255, 255, 0.28),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.card:hover::after { opacity: 1; }
+.card > * { position: relative; z-index: 1; }
 .hidden { display: none !important; }
 
 h1 {
@@ -579,6 +633,10 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes bootIn {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes liquidSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 @keyframes typeIn {
   from { opacity: 0; transform: translateY(8px); }

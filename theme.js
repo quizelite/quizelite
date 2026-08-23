@@ -17,6 +17,9 @@
         "aria-label",
         theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
       );
+      b.classList.remove("spin");
+      void b.offsetWidth;
+      b.classList.add("spin");
     });
   }
 
@@ -30,11 +33,21 @@
       : "light");
   apply(initial);
 
-  document.querySelectorAll(".theme-toggle").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      apply(next);
-      try { localStorage.setItem(KEY, next); } catch (e) {}
+  function bindButtons() {
+    document.querySelectorAll(".theme-toggle").forEach(function (btn) {
+      btn.textContent = iconFor(root.getAttribute("data-theme"));
+      btn.addEventListener("click", function () {
+        var next =
+          root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        apply(next);
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+      });
     });
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindButtons);
+  } else {
+    bindButtons();
+  }
 })();
