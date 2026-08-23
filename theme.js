@@ -33,21 +33,33 @@
       : "light");
   apply(initial);
 
-  function bindButtons() {
-    document.querySelectorAll(".theme-toggle").forEach(function (btn) {
-      btn.textContent = iconFor(root.getAttribute("data-theme"));
-      btn.addEventListener("click", function () {
-        var next =
-          root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        apply(next);
-        try { localStorage.setItem(KEY, next); } catch (e) {}
-      });
+  function bindMenu() {
+    var toggle = document.querySelector(".menu-toggle");
+    var menu = document.getElementById("dropdown-menu");
+    if (!toggle || !menu) return;
+    toggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = menu.classList.toggle("open");
+      toggle.classList.toggle("open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+        menu.classList.remove("open");
+        toggle.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bindButtons);
-  } else {
+  function init() {
     bindButtons();
+    bindMenu();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 })();

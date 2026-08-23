@@ -11,14 +11,19 @@
   <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="header">
     <div class="container header-inner">
+      <div class="header-left">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
       <a href="./" class="logo"><span class="logo-icon">🤖</span> Quiz<span class="accent">Elite</span></a>
+      </div>
       <nav class="nav">
-        <a href="./">Home</a>
-        <a href="about.html">About</a>
-        <a href="privacy-policy.html">Privacy Policy</a>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
       </nav>
     </div>
+    <nav class="dropdown-menu" id="dropdown-menu">
+      <a href="./">?? Home</a>
+      <a href="about.html">?? About</a>
+      <a href="privacy-policy.html">?? Privacy Policy</a>
+    </nav>
   </header>
 
   <main class="container">
@@ -54,8 +59,6 @@
     <div class="container footer-inner">
       <p>© <span id="year"></span> QuizElite — Free PC hardware knowledge tests.</p>
       <nav class="footer-nav">
-        <a href="about.html">About</a>
-        <a href="privacy-policy.html">Privacy Policy</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
