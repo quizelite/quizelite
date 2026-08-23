@@ -334,15 +334,6 @@
     });
   });
 
-  // Liquid glass: specular highlight follows the pointer on cards
-  document.querySelectorAll(".card").forEach(function (card) {
-    card.addEventListener("pointermove", function (e) {
-      var r = card.getBoundingClientRect();
-      card.style.setProperty("--mx", (e.clientX - r.left) + "px");
-      card.style.setProperty("--my", (e.clientY - r.top) + "px");
-    });
-  });
-
   // Init
   // Place the correct answer at a random position in each question (once at startup)
   QUESTIONS.forEach(function (q) {
