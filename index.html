@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="theme.js"></script>
   <title>QuizElite — Test Your PC Hardware Knowledge</title>
   <meta name="description" content="Free computer hardware quizzes. Test your knowledge of CPUs, GPUs, RAM, storage, motherboards and more. Multiple difficulty levels and instant scoring." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,6 +13,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
 </head>
 <body>
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
   <header class="header">
     <div class="container header-inner">
       <a href="./" class="logo"><span class="logo-icon">🤖</span> Quiz<span class="accent">Elite</span></a>
@@ -19,6 +21,7 @@
         <a href="./">Home</a>
         <a href="about.html">About</a>
         <a href="privacy-policy.html">Privacy Policy</a>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
       </nav>
     </div>
   </header>
