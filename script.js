@@ -139,13 +139,6 @@
     feedback.classList.add("hidden");
     nextBtn.classList.add("hidden");
 
-    // Shuffle answer order so the correct one isn't always in the same spot
-    var indices = shuffle([0, 1, 2, 3]);
-    q.answers = indices.map(function (origIdx) {
-      return q.answers[origIdx];
-    });
-    q.correct = indices.indexOf(q.correct);
-
     q.answers.forEach(function (text, i) {
       var btn = document.createElement("button");
       btn.className = "answer-btn";
@@ -267,6 +260,15 @@
   });
 
   // Init
+  // Place the correct answer at a random position in each question (once at startup)
+  QUESTIONS.forEach(function (q) {
+    var pos = Math.floor(Math.random() * 4);
+    var correctText = q.answers[q.correct];
+    q.answers.splice(q.correct, 1);
+    q.answers.splice(pos, 0, correctText);
+    q.correct = pos;
+  });
+
   populateCategories();
   document.getElementById("year").textContent = new Date().getFullYear();
 })();
