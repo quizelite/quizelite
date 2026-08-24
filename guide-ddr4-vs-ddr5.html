@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="theme.js"></script>
+  <title>DDR4 vs DDR5 RAM: Is the Upgrade Worth It? | QuizElite</title>
+  <meta name="description" content="DDR4 and DDR5 compared in plain English: speed, capacity, latency, compatibility and price, so you can decide which memory makes sense for your next PC build." />
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="./" class="logo"><span class="logo-icon">🤖</span> Quiz<span class="accent">Elite</span></a>
+      </div>
+      <nav class="nav">
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
+      </nav>
+    </div>
+    <nav class="dropdown-menu" id="dropdown-menu">
+      <button class="menu-close" type="button" aria-label="Close menu">✕</button>
+      <a href="./">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card article">
+      <h1>DDR4 vs DDR5 RAM: Is the Upgrade Worth It?</h1>
+      <p class="subtitle">What each memory generation actually changes — and what it doesn't.</p>
+
+      <p>RAM generations can feel like marketing noise: bigger numbers, new names, same sticks. But DDR4 and DDR5 are genuinely different technologies, and understanding where they differ helps you decide whether to pay extra on your next build or save money on the older standard.</p>
+
+      <h2>First, what DDR even means</h2>
+      <p>DDR stands for Double Data Rate: memory that transfers data twice per clock cycle, on both the rising and falling edge of the signal. Each generation roughly doubles the transfer rate potential of the previous one while using less energy per transfer. DDR4 arrived in 2014; DDR5 followed in 2021 alongside Intel's Alder Lake platform, with AMD joining from its Ryzen 7000 series.</p>
+
+      <h2>Speed: DDR5's headline advantage</h2>
+      <p>Entry-level DDR5 starts around 4800 MT/s, and mainstream kits now run at 6000–7200 MT/s or beyond. DDR4 tops out near 3200–4000 MT/s for most consumer systems. More bandwidth means the CPU waits less time to feed data in and out of memory — helpful in games with large open worlds, compression tasks, and anything touching big datasets.</p>
+
+      <h2>Capacity per stick</h2>
+      <p>DDR5 doubles the density possible on a single module. Where DDR4 consumer sticks commonly maxed out at 32 GB, DDR5 modules reach 48 GB, 64 GB and beyond. That matters if you edit video, run virtual machines, or simply want two sticks to carry you through a decade of software growth.</p>
+
+      <h2>Latency: DDR4's remaining edge</h2>
+      <p>Here is the twist: raw timings are worse on DDR5. A typical DDR4 kit runs CL16; comparable DDR5 often starts at CL30 or higher (measured against much faster clocks, to be fair). In practice this means early DDR5 sometimes performed no better than DDR4 in games. Modern DDR5 has closed most of that gap at mainstream speeds, but latency-sensitive workloads are where DDR4 still punches above its price.</p>
+
+      <h2>Clever engineering inside DDR5</h2>
+      <ul>
+        <li><strong>On-module power management:</strong> the PMIC moved onto the stick itself, freeing the motherboard to regulate more cleanly and improving signal stability.</li>
+        <li><strong>Two independent channels per module:</strong> each stick is split into two 32-bit subchannels, letting small requests run in parallel more efficiently.</li>
+        <li><strong>Better error handling:</strong> on-die ECC reduces internal errors (not the same as full ECC server memory, but still a reliability win).</li>
+        <li><strong>Lower voltage:</strong> 1.1 V standard versus DDR4's 1.2 V, despite higher speeds.</li>
+      </ul>
+
+      <h2>Compatibility and price</h2>
+      <p>The catch: DDR4 and DDR5 are physically keyed differently. A motherboard supports one or the other, never both, so your memory choice is really a platform choice. DDR5 boards and kits cost more, though the gap keeps shrinking as production ramps up. DDR4 remains attractive for budget builds around older CPUs.</p>
+
+      <h2>So, worth it?</h2>
+      <p>If you are building a brand-new mid-range or high-end system in the current generation: yes, go DDR5 — it is the future-proof path and performance differences are real at 6000 MT/s and above. If you are upgrading an existing DDR4 machine, new memory alone rarely justifies it; put that money toward an SSD or GPU first. And if every dollar counts, a well-priced DDR4 build still delivers excellent results today.</p>
+
+      <p style="margin-top:22px;"><a class="btn btn-primary" href="./">Test yourself: take the RAM quiz →</a></p>
+      <p style="margin-top:10px;"><a href="learn.html">← Back to all guides</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> QuizElite — Free PC hardware knowledge tests.</p>
+      <nav class="footer-nav">
+        <a href="learn.html">Learn</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="cookie.js"></script>
+</body>
+</html>

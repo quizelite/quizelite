@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="theme.js"></script>
+  <title>How to Choose a Power Supply (PSU) | QuizElite</title>
+  <meta name="description" content="How to pick the right power supply for your PC: wattage math, 80 Plus efficiency ratings, quality tiers, connectors and why the PSU protects everything else in your build." />
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="./" class="logo"><span class="logo-icon">🤖</span> Quiz<span class="accent">Elite</span></a>
+      </div>
+      <nav class="nav">
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
+      </nav>
+    </div>
+    <nav class="dropdown-menu" id="dropdown-menu">
+      <button class="menu-close" type="button" aria-label="Close menu">✕</button>
+      <a href="./">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card article">
+      <h1>How to Choose a Power Supply (PSU)</h1>
+      <p class="subtitle">The least glamorous part might be the most important one in your PC.</p>
+
+      <p>Nobody shows off their power supply. It adds no frames per second, no RGB glow, no benchmark points. Yet the PSU touches every component in your machine, and a bad one can take the whole system down with it — or worse, damage expensive parts. Here is how to choose one properly, without an electrical engineering degree.</p>
+
+      <h2>Step 1: calculate your wattage</h2>
+      <p>Every part draws power; the CPU and graphics card draw most of it. Add up rough peaks: a modern mid-range CPU needs 65–150 W, a mainstream GPU 150–320 W, and drives, fans, RAM and the motherboard together add another 50–100 W. Free online PSU calculators do this math for you. Whatever total you get, buy roughly 30–50% above it: running a PSU at 50–70% load is where efficiency and acoustics are best, and headroom covers transient spikes that modern GPUs are famous for.</p>
+
+      <h2>Step 2: understand efficiency ratings</h2>
+      <p>The 80 Plus label (Standard, Bronze, Silver, Gold, Platinum, Titanium) certifies how much wall power becomes usable DC power instead of heat at typical loads. A Gold unit converts around 90% at half load. Higher ratings mean lower electricity bills, less fan noise and usually better internal components — but the badge alone does not guarantee safety or quality. It measures efficiency, not reliability.</p>
+
+      <h2>Step 3: judge the quality behind the label</h2>
+      <ul>
+        <li><strong>Reputable platforms:</strong> stick to brands with long warranty support (7–10 year warranties are common on good units).</li>
+        <li><strong>Protections:</strong> ensure over-voltage, under-voltage, over-current, short-circuit and over-power protections (OVP/UVP/OCP/SCP/OPP) are listed.</li>
+        <li><strong>Capacitor quality:</strong> Japanese capacitors have earned a reputation for longevity, especially under heat.</li>
+        <li><strong>Reviews:</strong> independent teardowns reveal far more than any marketing sheet.</li>
+      </ul>
+
+      <h2>Step 4: connectors and form factor</h2>
+      <p>Check the GPU you want: high-end cards need one, two or even three 8-pin (12VHPWR on newer models) power connectors — confirm the PSU includes them natively rather than relying on adapters. Modular or semi-modular designs let you attach only the cables you use, which helps airflow and cable management. Standard ATX size fits most towers; small form factor builds may need SFX units.</p>
+
+      <h2>Common mistakes to avoid</h2>
+      <ul>
+        <li><strong>Buying exactly your calculated wattage:</strong> no headroom means the unit runs hot, loud and stressed.</li>
+        <li><strong>Saving here:</strong> a $25 no-name unit risks every other component. This is the wrong place to cut budget.</li>
+        <li><strong>Reusing ancient units:</strong> PSUs age; a 12-year-old "800 W" beast may no longer deliver clean power safely.</li>
+        <li><strong>Ignoring transient spikes:</strong> some GPUs briefly draw double their rated power for milliseconds; quality units shrug this off.</li>
+      </ul>
+
+      <h2>The quick recipe</h2>
+      <p>For a typical mid-range build: a 650–750 W 80 Plus Gold unit from a reputable brand with a 7+ year warranty covers you comfortably, quietly and safely. Spend the saved dollars elsewhere — but never skip them here.</p>
+
+      <p style="margin-top:22px;"><a class="btn btn-primary" href="./">Test yourself: take the motherboard & power quiz →</a></p>
+      <p style="margin-top:10px;"><a href="learn.html">← Back to all guides</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> QuizElite — Free PC hardware knowledge tests.</p>
+      <nav class="footer-nav">
+        <a href="learn.html">Learn</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="cookie.js"></script>
+</body>
+</html>

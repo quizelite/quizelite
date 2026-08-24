@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://quizelite.github.io/quizelite/sitemap.xml

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="theme.js"></script>
+  <title>CPU vs GPU: What Does What? | QuizElite</title>
+  <meta name="description" content="A plain-English explanation of the difference between a CPU and a GPU, what each one does best, and how to balance them when building or buying a PC." />
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="./" class="logo"><span class="logo-icon">🤖</span> Quiz<span class="accent">Elite</span></a>
+      </div>
+      <nav class="nav">
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
+      </nav>
+    </div>
+    <nav class="dropdown-menu" id="dropdown-menu">
+      <button class="menu-close" type="button" aria-label="Close menu">✕</button>
+      <a href="./">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card article">
+      <h1>CPU vs GPU: What Does What?</h1>
+      <p class="subtitle">The two processors inside almost every computer, and why you need both.</p>
+
+      <p>Open up any modern PC — gaming rig, work laptop, even a console — and you will find two very different processors working side by side: the CPU and the GPU. People often argue about which one is "more important", but the truth is they are designed for completely different jobs, and your computer needs both to function.</p>
+
+      <h2>The CPU: the general-purpose brain</h2>
+      <p>The Central Processing Unit (CPU) is the computer's generalist. It handles the operating system, runs your browser, manages files, reacts to your keyboard and mouse, and coordinates every other component. A CPU has a small number of extremely powerful cores — modern consumer chips have between 4 and 24 — each capable of executing complex instructions at incredible speed with minimal delay (latency).</p>
+      <p>Think of the CPU as a few brilliant mathematicians: give any one of them a complicated problem and they will solve it quickly. But if you hand them a million identical simple problems, they will struggle to keep up.</p>
+
+      <h2>The GPU: the parallel powerhouse</h2>
+      <p>The Graphics Processing Unit (GPU) is the opposite specialist. Instead of a few powerful cores, it contains thousands of small ones designed to do the same simple calculation at the same time. This architecture, called parallel processing, was created to draw images: every pixel on screen needs its color calculated independently of its neighbors.</p>
+      <p>Using our analogy, the GPU is an army of ten thousand average students: useless at solving one hard problem, unbeatable at grading a million easy ones in a single pass.</p>
+
+      <h2>Why games lean on the GPU</h2>
+      <p>Modern games must calculate lighting, textures and geometry for millions of pixels per frame, dozens of times per second. That is perfectly parallel work, which is why graphics cards matter so much for gaming resolution and frame rate. A weak GPU forces you to lower settings; a weak CPU creates stuttering no graphics setting can fix, because the game logic itself cannot keep up.</p>
+
+      <h2>Beyond graphics: GPUs as compute engines</h2>
+      <p>In the last two decades engineers realized that anything massively parallel benefits from GPU architecture: video editing and rendering, physics simulation, cryptocurrency mining, and above all artificial intelligence. Training large AI models is essentially billions of small matrix multiplications — exactly what GPUs excel at. This is why data centers today are filled with specialized accelerators derived from graphics technology.</p>
+
+      <h2>How to balance them</h2>
+      <ul>
+        <li><strong>Office and study use:</strong> a modern CPU with integrated graphics is enough — no separate GPU needed.</li>
+        <li><strong>1080p gaming:</strong> spend roughly evenly on both parts; a mid-range pairing avoids bottlenecks.</li>
+        <li><strong>High refresh or 4K gaming:</strong> allocate more budget to the GPU, but never starve the CPU entirely.</li>
+        <li><strong>Video editing, streaming, compiling:</strong> more CPU cores pay off directly.</li>
+      </ul>
+
+      <p>The next time someone asks whether the CPU or the GPU matters more, the honest answer is: it depends on the workload. The real skill is matching the pair to what you actually do — and now you know why.</p>
+
+      <p style="margin-top:22px;"><a class="btn btn-primary" href="./">Test yourself: take the CPU & GPU quiz →</a></p>
+      <p style="margin-top:10px;"><a href="learn.html">← Back to all guides</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> QuizElite — Free PC hardware knowledge tests.</p>
+      <nav class="footer-nav">
+        <a href="learn.html">Learn</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="cookie.js"></script>
+</body>
+</html>
