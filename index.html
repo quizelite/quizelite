@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
 </head>
 <body>
@@ -142,6 +142,14 @@
         </button>
       </div>
 
+      <div class="picker-group">
+        <span class="picker-label">Mode</span>
+        <div class="difficulty-toggle" id="mode-toggle">
+          <button class="diff-btn mode-btn active" data-mode="solo">👤 Solo</button>
+          <button class="diff-btn mode-btn" data-mode="duel">⚔️ 1v1 Duel</button>
+        </div>
+      </div>
+
       <p id="question-count-info" class="count-info"></p>
       <p id="best-score-info" class="best-info"></p>
 
@@ -176,6 +184,14 @@
       <button id="next-btn" class="btn btn-primary hidden">Next Question →</button>
     </section>
 
+    <!-- Pass device screen (duel) -->
+    <section id="pass-screen" class="screen card hidden">
+      <div class="pass-emoji" aria-hidden="true">📱</div>
+      <h2 id="pass-title">Pass the device to Player 2</h2>
+      <p class="subtitle">Same 10 questions — no peeking at Player 1's run! 🙈</p>
+      <button id="ready-btn" class="btn btn-primary btn-lg">I'm Player 2 — Ready! ⚔️</button>
+    </section>
+
     <!-- Results screen -->
     <section id="results-screen" class="screen card hidden">
       <div class="mascot mascot-sm" aria-hidden="true">
@@ -207,6 +223,21 @@
       <div id="result-emoji" class="result-emoji">🎉</div>
       <h2 id="result-title" class="result-title"></h2>
       <p id="result-message" class="result-message"></p>
+
+      <div id="duel-scoreboard" class="duel-scoreboard hidden">
+        <div class="duel-side">
+          <span class="duel-name">Player 1</span>
+          <span id="duel-p1" class="duel-pts">0</span>
+          <span id="duel-correct1" class="duel-correct"></span>
+        </div>
+        <div class="duel-vs">VS</div>
+        <div class="duel-side">
+          <span class="duel-name">Player 2</span>
+          <span id="duel-p2" class="duel-pts">0</span>
+          <span id="duel-correct2" class="duel-correct"></span>
+        </div>
+      </div>
+      <div id="duel-winner" class="duel-winner hidden"></div>
 
       <div class="result-stats">
         <div class="stat">
@@ -242,7 +273,7 @@
   </footer>
 
   <script src="questions.js?v=3"></script>
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
   <script src="cookie.js"></script>
 </body>
 </html>

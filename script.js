@@ -9,11 +9,15 @@
 
   var startScreen = document.getElementById("start-screen");
   var quizScreen = document.getElementById("quiz-screen");
+  var passScreen = document.getElementById("pass-screen");
   var resultsScreen = document.getElementById("results-screen");
+  var modeButtons = Array.prototype.slice.call(
+    document.querySelectorAll(".mode-btn")
+  );
 
   var categorySelect = document.getElementById("category-select");
   var diffButtons = Array.prototype.slice.call(
-    document.querySelectorAll(".diff-btn")
+    document.querySelectorAll(".diff-btn:not(.mode-btn)")
   );
   var countInfo = document.getElementById("question-count-info");
   var startBtn = document.getElementById("start-btn");
@@ -45,6 +49,11 @@
   var state = {
     category: "all",
     difficulty: "easy",
+    mode: "solo",
+    duelPlayer: 1,
+    duelQueue: null,
+    duelScores: [0, 0],
+    duelCorrect: [0, 0],
     queue: [],
     index: 0,
     score: 0,
@@ -180,6 +189,10 @@
   function updateBestInfo() {
     var el = document.getElementById("best-score-info");
     if (!el) return;
+    if (state.mode === "duel") {
+      el.textContent = "";
+      return;
+    }
     var best = getBest();
     if (best <= 0) {
       el.textContent = "";
@@ -365,7 +378,7 @@
   }
 
   function show(screen) {
-    [startScreen, quizScreen, resultsScreen].forEach(function (s) {
+    [startScreen, quizScreen, passScreen, resultsScreen].forEach(function (s) {
       s.classList.add("hidden");
     });
     screen.classList.remove("hidden");
@@ -376,7 +389,21 @@
     if (pool.length === 0) return;
 
     stopTimer();
-    state.queue = shuffle(pool).slice(0, QUESTIONS_PER_QUIZ);
+
+    if (state.mode === "duel") {
+      if (!state.duelQueue) {
+        state.duelQueue = shuffle(pool).slice(0, QUESTIONS_PER_QUIZ);
+        state.duelPlayer = 1;
+        state.duelScores = [0, 0];
+        state.duelCorrect = [0, 0];
+      }
+      state.queue = state.duelQueue.slice();
+    } else {
+      state.duelQueue = null;
+      state.duelPlayer = 1;
+      state.queue = shuffle(pool).slice(0, QUESTIONS_PER_QUIZ);
+    }
+
     state.index = 0;
     state.score = 0;
     state.correctCount = 0;
@@ -384,6 +411,7 @@
     state.bestStreak = 0;
 
     quizCategory.textContent =
+      (state.mode === "duel" ? "P" + state.duelPlayer + " · " : "") +
       (state.category === "all" ? "Mixed" : state.category) +
       " · " +
       state.difficulty +
@@ -543,11 +571,27 @@
   function showResults() {
     var total = state.queue.length;
     var percent = Math.round((state.correctCount / total) * 100);
-    var isRecord = saveBestIfRecord(state.score);
 
     stopTimer();
-
     progressFill.style.width = "100%";
+
+    if (state.mode === "duel") {
+      state.duelScores[state.duelPlayer - 1] = state.score;
+      state.duelCorrect[state.duelPlayer - 1] = state.correctCount;
+      if (state.duelPlayer === 1) {
+        show(passScreen);
+        return;
+      }
+      showDuelResults();
+      return;
+    }
+
+    var isRecord = saveBestIfRecord(state.score);
+
+    document.querySelector(".result-stats").classList.remove("hidden");
+    document.getElementById("duel-scoreboard").classList.add("hidden");
+    document.getElementById("duel-winner").classList.add("hidden");
+    document.getElementById("retry-btn").textContent = "Try Again";
 
     statScore.textContent = state.score;
     statCorrect.textContent = state.correctCount + "/" + total;
@@ -607,15 +651,93 @@
     show(resultsScreen);
   }
 
+  function showDuelResults() {
+    var s1 = state.duelScores[0];
+    var s2 = state.duelScores[1];
+    var c1 = state.duelCorrect[0];
+    var c2 = state.duelCorrect[1];
+
+    document.querySelector(".result-stats").classList.add("hidden");
+    var scoreboard = document.getElementById("duel-scoreboard");
+    scoreboard.classList.remove("hidden");
+    document.getElementById("duel-p1").textContent = s1;
+    document.getElementById("duel-p2").textContent = s2;
+    document.getElementById("duel-correct1").textContent = c1 + "/" + state.queue.length + " correct";
+    document.getElementById("duel-correct2").textContent = c2 + "/" + state.queue.length + " correct";
+
+    var winnerEl = document.getElementById("duel-winner");
+    var suffix =
+      (state.category === "all" ? "Mixed" : state.category) +
+      " · " +
+      state.difficulty +
+      (state.timed ? " · timed" : "");
+
+    if (s1 > s2) {
+      winnerEl.textContent = "🏆 Player 1 wins!";
+      resultEmoji.textContent = "🥇";
+      resultTitle.textContent = "Player 1 takes the duel!";
+      resultMessage.textContent = "A flawless victory in " + suffix + ".";
+      launchConfetti(resultsScreen);
+      sfx.victory();
+      shareText = "Player 1 beat Player 2 " + s1 + "-" + s2 + " at QuizElite ⚔️ Can you do better?";
+    } else if (s2 > s1) {
+      winnerEl.textContent = "🏆 Player 2 wins!";
+      resultEmoji.textContent = "🥇";
+      resultTitle.textContent = "Player 2 takes the duel!";
+      resultMessage.textContent = "What a comeback in " + suffix + ".";
+      launchConfetti(resultsScreen);
+      sfx.victory();
+      shareText = "Player 2 beat Player 1 " + s2 + "-" + s1 + " at QuizElite ⚔️ Can you do better?";
+    } else {
+      winnerEl.textContent = "🤝 It's a tie!";
+      resultEmoji.textContent = "⚖️";
+      resultTitle.textContent = "Perfectly matched!";
+      resultMessage.textContent = s1 + " pts each in " + suffix + ". Rematch?";
+      sfx.victory();
+      shareText = "We tied " + s1 + "-" + s2 + " at QuizElite ⚔️ Think you can beat both?";
+    }
+    winnerEl.classList.remove("hidden");
+
+    document.getElementById("retry-btn").textContent = "Rematch ⚔️";
+
+    show(resultsScreen);
+  }
+
+  function resetDuel() {
+    state.duelQueue = null;
+    state.duelPlayer = 1;
+  }
+
   // ===== Events =====
   document.getElementById("start-btn").addEventListener("click", function () {
     sfx.click();
     startQuiz();
   });
   nextBtn.addEventListener("click", next);
-  document.getElementById("retry-btn").addEventListener("click", startQuiz);
+  document.getElementById("retry-btn").addEventListener("click", function () {
+    resetDuel();
+    startQuiz();
+  });
+  document.getElementById("ready-btn").addEventListener("click", function () {
+    sfx.click();
+    state.duelPlayer = 2;
+    startQuiz();
+  });
+  modeButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      modeButtons.forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+      state.mode = btn.dataset.mode;
+      resetDuel();
+      sfx.click();
+      updateCountInfo();
+    });
+  });
   document.getElementById("home-btn").addEventListener("click", function () {
     stopTimer();
+    resetDuel();
     updateBestInfo();
     show(startScreen);
   });
@@ -700,6 +822,7 @@
     }
 
     if (resultsVisible && e.key.toLowerCase() === "r") {
+      resetDuel();
       startQuiz();
     }
   });
@@ -708,6 +831,7 @@
   document.querySelector(".logo").addEventListener("click", function (e) {
     e.preventDefault();
     stopTimer();
+    resetDuel();
     show(startScreen);
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
