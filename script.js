@@ -43,6 +43,52 @@
     answered: false,
   };
 
+  var shareText = "";
+
+  var BEST_KEY = "quizelite-best";
+
+  function bestKey() {
+    return state.category + "|" + state.difficulty;
+  }
+
+  function getBests() {
+    try {
+      return JSON.parse(localStorage.getItem(BEST_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function getBest() {
+    return getBests()[bestKey()] || 0;
+  }
+
+  function saveBestIfRecord(score) {
+    if (score <= 0) return false;
+    var bests = getBests();
+    if (score > (bests[bestKey()] || 0)) {
+      bests[bestKey()] = score;
+      try { localStorage.setItem(BEST_KEY, JSON.stringify(bests)); } catch (e) {}
+      return true;
+    }
+    return false;
+  }
+
+  function updateBestInfo() {
+    var el = document.getElementById("best-score-info");
+    if (!el) return;
+    var best = getBest();
+    if (best <= 0) {
+      el.textContent = "";
+    } else {
+      var label =
+        (state.category === "all" ? "Mixed" : state.category) +
+        " · " +
+        state.difficulty;
+      el.textContent = "🏆 Your best: " + best + " pts (" + label + ")";
+    }
+  }
+
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -104,6 +150,7 @@
       startBtn.disabled = false;
     }
     syncChipSelection();
+    updateBestInfo();
   }
 
   function syncChipSelection() {
@@ -194,6 +241,14 @@
     feedback.textContent = isCorrect
       ? "✅ Correct!"
       : "❌ Wrong — the correct answer is: " + q.answers[q.correct];
+
+    if (q.explain) {
+      var explainEl = document.createElement("p");
+      explainEl.className = "feedback-explain";
+      explainEl.textContent = "💡 " + q.explain;
+      feedback.appendChild(explainEl);
+    }
+
     feedback.classList.remove("hidden");
 
     nextBtn.textContent =
@@ -213,6 +268,7 @@
   function showResults() {
     var total = state.queue.length;
     var percent = Math.round((state.correctCount / total) * 100);
+    var isRecord = saveBestIfRecord(state.score);
 
     progressFill.style.width = "100%";
 
@@ -247,6 +303,18 @@
         "Everyone starts somewhere. Read up and try again!";
     }
 
+    if (isRecord) {
+      resultMessage.textContent += " 🎉 New personal best!";
+    }
+    shareText =
+      "I scored " +
+      percent +
+      "% (" +
+      state.score +
+      " pts) — " +
+      tier +
+      " Can you beat me?";
+
     show(resultsScreen);
   }
 
@@ -257,7 +325,25 @@
     .getElementById("retry-btn")
     .addEventListener("click", startQuiz);
   document.getElementById("home-btn").addEventListener("click", function () {
+    updateBestInfo();
     show(startScreen);
+  });
+
+  document.getElementById("share-btn").addEventListener("click", function () {
+    var btn = this;
+    var url = "https://quizelite.github.io/quizelite/";
+    var full = shareText + " " + url;
+    if (navigator.share) {
+      navigator.share({ title: "QuizElite", text: shareText, url: url })
+        .catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(full).then(function () {
+        btn.textContent = "Copied! ✓";
+        setTimeout(function () {
+          btn.textContent = "Share Result 🔗";
+        }, 1600);
+      });
+    }
   });
 
   diffButtons.forEach(function (btn) {

@@ -647,6 +647,13 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 }
 .feedback.ok { background: rgba(18, 161, 80, 0.12); border: 1px solid rgba(18, 161, 80, 0.4); }
 .feedback.no { background: rgba(228, 72, 92, 0.12); border: 1px solid rgba(228, 72, 92, 0.4); }
+.feedback-explain {
+  margin-top: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--ink-dim);
+}
+.best-info { color: var(--ink-dim); font-size: 0.85rem; font-weight: 600; min-height: 0; margin: -14px 0 18px; }
 #next-btn { margin-top: 20px; animation: typeIn 0.35s ease both; }
 
 /* ===== Results ===== */
