@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
 </head>
 <body>
@@ -146,8 +146,19 @@
         <span class="picker-label">Mode</span>
         <div class="difficulty-toggle" id="mode-toggle">
           <button class="diff-btn mode-btn active" data-mode="solo">👤 Solo</button>
-          <button class="diff-btn mode-btn" data-mode="duel">⚔️ 1v1 Duel</button>
+          <button class="diff-btn mode-btn" data-mode="duel">⚔️ 1v1</button>
+          <button class="diff-btn mode-btn" data-mode="online">🌐 Online</button>
         </div>
+      </div>
+
+      <div id="online-panel" class="online-panel hidden">
+        <div class="online-actions">
+          <button id="online-create" class="btn btn-primary">Create room</button>
+          <span class="online-or">or</span>
+          <input id="online-code" class="online-input" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false" aria-label="Room code" />
+          <button id="online-join" class="btn btn-secondary">Join</button>
+        </div>
+        <p id="online-status" class="online-status"></p>
       </div>
 
       <p id="question-count-info" class="count-info"></p>
@@ -170,6 +181,7 @@
           <path class="mouth m-frown" d="M16 30 Q22 26.5 28 30"/>
         </svg>
         <span id="streak-chip" class="streak-chip hidden"></span>
+        <span id="rival-chip" class="rival-chip hidden"></span>
         <span id="quiz-timer" class="quiz-timer hidden"></span>
         <span id="quiz-progress" class="progress-text"></span>
         <span id="quiz-score" class="score-text">Score: 0</span>
@@ -272,8 +284,11 @@
     </div>
   </footer>
 
-  <script src="questions.js?v=3"></script>
-  <script src="script.js?v=4"></script>
+  <script src="questions.js?v=4"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="online.js?v=1"></script>
+  <script src="script.js?v=5"></script>
   <script src="cookie.js"></script>
 </body>
 </html>

@@ -38,6 +38,14 @@
   var quizTimer = document.getElementById("quiz-timer");
   var timerToggle = document.getElementById("timer-toggle");
   var soundToggle = document.getElementById("sound-toggle");
+  var onlinePanel = document.getElementById("online-panel");
+  var onlineCreate = document.getElementById("online-create");
+  var onlineJoin = document.getElementById("online-join");
+  var onlineCode = document.getElementById("online-code");
+  var onlineStatus = document.getElementById("online-status");
+  var rivalChip = document.getElementById("rival-chip");
+
+  var QO = window.QuizOnline || null;
 
   var statScore = document.getElementById("stat-score");
   var statCorrect = document.getElementById("stat-correct");
@@ -45,6 +53,7 @@
   var resultTitle = document.getElementById("result-title");
   var resultMessage = document.getElementById("result-message");
   var resultEmoji = document.getElementById("result-emoji");
+  var resultStatsEl = document.querySelector(".result-stats");
 
   var state = {
     category: "all",
@@ -54,6 +63,7 @@
     duelQueue: null,
     duelScores: [0, 0],
     duelCorrect: [0, 0],
+    online: { active: false, oppIdx: 0, oppScore: 0, oppDone: false },
     queue: [],
     index: 0,
     score: 0,
@@ -353,6 +363,11 @@
   }
 
   function updateCountInfo() {
+    if (state.mode === "online") {
+      countInfo.textContent = "Create a room or join with a code — the host's settings are used for both players.";
+      startBtn.disabled = true;
+      return;
+    }
     var n = availableQuestions().length;
     if (n === 0) {
       countInfo.textContent =
@@ -384,8 +399,103 @@
     screen.classList.remove("hidden");
   }
 
-  function startQuiz() {
-    var pool = availableQuestions();
+  function setOnlineUI(active) {
+    if (onlinePanel) onlinePanel.classList.toggle("hidden", !active);
+    if (startBtn) {
+      startBtn.disabled = active;
+      startBtn.textContent = active ? "Waiting for rival…" : "Start Quiz →";
+    }
+    if (!active && rivalChip) rivalChip.classList.add("hidden");
+  }
+
+  function setOnlineStatus(msg, isError) {
+    if (onlineStatus) {
+      onlineStatus.textContent = msg || "";
+      onlineStatus.classList.toggle("error", !!isError);
+    }
+  }
+
+  function updateRivalChip() {
+    if (!rivalChip) return;
+    if (!state.online.active) {
+      rivalChip.classList.add("hidden");
+      return;
+    }
+    rivalChip.classList.remove("hidden");
+    if (state.online.oppDone) {
+      rivalChip.textContent = "Rival finished! ✓ " + state.online.oppScore + " pts";
+    } else {
+      rivalChip.textContent =
+        "Rival · Q" + (state.online.oppIdx + 1) + " · " + state.online.oppScore + " pts";
+    }
+  }
+
+  function buildOnlineQuestions() {
+    return shuffle(availableQuestions())
+      .slice(0, QUESTIONS_PER_QUIZ)
+      .map(function (q) {
+        return {
+          question: q.question,
+          answers: q.answers.slice(),
+          correct: q.correct,
+          difficulty: q.difficulty,
+          category: q.category,
+          explain: q.explain || "",
+        };
+      });
+  }
+
+  function wireOnline() {
+    if (!QO) return;
+    QO.setQuestionGenerator(buildOnlineQuestions);
+
+    QO.on("created", function (c) {
+      setOnlineStatus("📡 Room " + c + " — share this code with your rival!");
+    });
+    QO.on("joined", function (d) {
+      setOnlineStatus("📡 Joined room " + d.code + " — waiting for the host to start…");
+    });
+    QO.on("error", function (msg) {
+      setOnlineStatus("⚠️ " + msg, true);
+    });
+    QO.on("start", function (d) {
+      state.online.active = true;
+      state.online.oppIdx = 0;
+      state.online.oppScore = 0;
+      state.online.oppDone = false;
+      setOnlineStatus("");
+      startQuiz(d.questions);
+    });
+    QO.on("progress", function (d) {
+      state.online.oppIdx = d.idx;
+      state.online.oppScore = d.score;
+      state.online.oppDone = d.done;
+      updateRivalChip();
+    });
+    QO.on("waitingRematch", function () {
+      setOnlineStatus("Rematch requested — waiting for the host…");
+    });
+    QO.on("opponentLeft", function () {
+      if (!state.online.active) return;
+      state.online.active = false;
+      stopTimer();
+      showOnlineResults(
+        { score: state.score, correct: state.correctCount },
+        { score: state.online.oppScore, correct: 0 },
+        true
+      );
+    });
+    QO.on("bothDone", function (d) {
+      if (!state.online.active) return;
+      state.online.active = false;
+      var mine = QO.role() === "host" ? d.host : d.guest;
+      var theirs = QO.role() === "host" ? d.guest : d.host;
+      showOnlineResults(mine, theirs, false);
+    });
+  }
+
+  function startQuiz(overrideQueue) {
+    var pool = overrideQueue || availableQuestions();
     if (pool.length === 0) return;
 
     stopTimer();
@@ -398,6 +508,8 @@
         state.duelCorrect = [0, 0];
       }
       state.queue = state.duelQueue.slice();
+    } else if (overrideQueue) {
+      state.queue = overrideQueue.slice();
     } else {
       state.duelQueue = null;
       state.duelPlayer = 1;
@@ -412,11 +524,15 @@
 
     quizCategory.textContent =
       (state.mode === "duel" ? "P" + state.duelPlayer + " · " : "") +
+      (state.mode === "online"
+        ? "You · "
+        : "") +
       (state.category === "all" ? "Mixed" : state.category) +
       " · " +
       state.difficulty +
       (state.timed ? " · timed" : "");
 
+    updateRivalChip();
     show(quizScreen);
     renderQuestion();
   }
@@ -483,6 +599,10 @@
     updateStreakUI();
 
     quizScoreEl.textContent = "Score: " + state.score;
+
+    if (state.mode === "online" && QO) {
+      QO.sendProgress(state.index, state.score, false, state.correctCount);
+    }
 
     feedback.className = "feedback " + (isCorrect ? "ok" : "no");
     feedback.textContent = isCorrect
@@ -586,11 +706,27 @@
       return;
     }
 
+    if (state.mode === "online") {
+      if (QO) {
+        QO.sendProgress(state.index, state.score, true, state.correctCount);
+      }
+      resultStatsEl.classList.add("hidden");
+      document.getElementById("duel-scoreboard").classList.add("hidden");
+      document.getElementById("duel-winner").classList.add("hidden");
+      document.getElementById("retry-btn").classList.add("hidden");
+      resultEmoji.textContent = "⏳";
+      resultTitle.textContent = "You finished!";
+      resultMessage.textContent = state.score + " pts — waiting for your rival…";
+      show(resultsScreen);
+      return;
+    }
+
     var isRecord = saveBestIfRecord(state.score);
 
-    document.querySelector(".result-stats").classList.remove("hidden");
+    resultStatsEl.classList.remove("hidden");
     document.getElementById("duel-scoreboard").classList.add("hidden");
     document.getElementById("duel-winner").classList.add("hidden");
+    document.getElementById("retry-btn").classList.remove("hidden");
     document.getElementById("retry-btn").textContent = "Try Again";
 
     statScore.textContent = state.score;
@@ -657,7 +793,7 @@
     var c1 = state.duelCorrect[0];
     var c2 = state.duelCorrect[1];
 
-    document.querySelector(".result-stats").classList.add("hidden");
+    resultStatsEl.classList.add("hidden");
     var scoreboard = document.getElementById("duel-scoreboard");
     scoreboard.classList.remove("hidden");
     document.getElementById("duel-p1").textContent = s1;
@@ -708,6 +844,63 @@
     state.duelPlayer = 1;
   }
 
+  function showOnlineResults(mine, theirs, rivalLeft) {
+    resultStatsEl.classList.add("hidden");
+    var scoreboard = document.getElementById("duel-scoreboard");
+    scoreboard.classList.remove("hidden");
+    var names = document.querySelectorAll(".duel-name");
+    names[0].textContent = "You";
+    names[1].textContent = "Rival";
+    document.getElementById("duel-p1").textContent = mine.score;
+    document.getElementById("duel-p2").textContent = theirs.score;
+    document.getElementById("duel-correct1").textContent =
+      mine.correct + "/" + state.queue.length + " correct";
+    document.getElementById("duel-correct2").textContent = rivalLeft
+      ? "left the match"
+      : theirs.correct + "/" + state.queue.length + " correct";
+
+    var winnerEl = document.getElementById("duel-winner");
+    var suffix = (state.category === "all" ? "Mixed" : state.category) + " · " + state.difficulty;
+
+    if (rivalLeft) {
+      winnerEl.textContent = "🏆 You win — rival left!";
+      resultEmoji.textContent = "🚶";
+      resultTitle.textContent = "Victory by walkout!";
+      resultMessage.textContent = "Your rival disconnected. " + mine.score + " pts were enough.";
+      sfx.victory();
+      shareText = "My rival fled the QuizElite duel 🏃 I had " + mine.score + " pts. Dare to play me?";
+    } else if (mine.score > theirs.score) {
+      winnerEl.textContent = "🏆 You win!";
+      resultEmoji.textContent = "🥇";
+      resultTitle.textContent = "You took the online duel!";
+      resultMessage.textContent = mine.score + " vs " + theirs.score + " pts in " + suffix + ".";
+      launchConfetti(resultsScreen);
+      sfx.victory();
+      shareText = "I won the online duel " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Play me!";
+    } else if (theirs.score > mine.score) {
+      winnerEl.textContent = "💀 Rival wins";
+      resultEmoji.textContent = "😤";
+      resultTitle.textContent = "So close…";
+      resultMessage.textContent = theirs.score + " vs your " + mine.score + " pts in " + suffix + ". Rematch?";
+      sfx.defeat();
+      shareText = "I lost the online duel " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Revenge?";
+    } else {
+      winnerEl.textContent = "🤝 It's a tie!";
+      resultEmoji.textContent = "⚖️";
+      resultTitle.textContent = "Perfectly matched!";
+      resultMessage.textContent = mine.score + " pts each in " + suffix + ".";
+      sfx.victory();
+      shareText = "We tied " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Beat us both!";
+    }
+    winnerEl.classList.remove("hidden");
+
+    var retryBtn = document.getElementById("retry-btn");
+    retryBtn.textContent = "Rematch 🌐";
+    retryBtn.classList.remove("hidden");
+
+    show(resultsScreen);
+  }
+
   // ===== Events =====
   document.getElementById("start-btn").addEventListener("click", function () {
     sfx.click();
@@ -715,6 +908,17 @@
   });
   nextBtn.addEventListener("click", next);
   document.getElementById("retry-btn").addEventListener("click", function () {
+    if (state.mode === "online") {
+      if (QO) {
+        setOnlineStatus(
+          QO.role() === "host"
+            ? "Dealing new questions…"
+            : "Rematch requested — waiting for the host…"
+        );
+        QO.rematch();
+      }
+      return;
+    }
     resetDuel();
     startQuiz();
   });
@@ -731,6 +935,22 @@
       btn.classList.add("active");
       state.mode = btn.dataset.mode;
       resetDuel();
+      if (state.mode === "online") {
+        setOnlineUI(true);
+        if (QO && QO.configured()) {
+          setOnlineStatus("Create a room or join with a code.");
+        } else {
+          setOnlineStatus(
+            "⚠️ Online needs Firebase configuration — paste your config in online.js.",
+            true
+          );
+        }
+      } else {
+        setOnlineUI(false);
+        setOnlineStatus("");
+        if (QO) QO.leave();
+        state.online.active = false;
+      }
       sfx.click();
       updateCountInfo();
     });
@@ -738,6 +958,12 @@
   document.getElementById("home-btn").addEventListener("click", function () {
     stopTimer();
     resetDuel();
+    if (state.mode === "online" && QO) {
+      QO.leave();
+      state.online.active = false;
+      setOnlineUI(true);
+      setOnlineStatus("Left the match. Create or join another room.");
+    }
     updateBestInfo();
     show(startScreen);
   });
@@ -832,6 +1058,10 @@
     e.preventDefault();
     stopTimer();
     resetDuel();
+    if (QO) {
+      QO.leave();
+      state.online.active = false;
+    }
     show(startScreen);
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -866,6 +1096,34 @@
       ripple.remove();
     });
   });
+
+  if (onlineCreate) {
+    onlineCreate.addEventListener("click", function () {
+      sfx.click();
+      if (QO) {
+        QO.createRoom(buildOnlineQuestions(), {
+          category: state.category,
+          difficulty: state.difficulty,
+          timed: state.timed,
+        });
+      }
+    });
+  }
+
+  if (onlineJoin) {
+    onlineJoin.addEventListener("click", function () {
+      sfx.click();
+      if (QO) QO.joinRoom(onlineCode.value);
+    });
+  }
+
+  if (onlineCode) {
+    onlineCode.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && onlineJoin) onlineJoin.click();
+    });
+  }
+
+  wireOnline();
 
   // Init
   // Place the correct answer at a random position in each question (once at startup)

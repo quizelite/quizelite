@@ -53,6 +53,28 @@ git push -u origin main
 4. Wait for DNS propagation, then enable **Enforce HTTPS** in GitHub Pages settings.
 5. Add a `CNAME` file in the repo root containing just your domain (GitHub does this automatically if set via UI).
 
+## Online 1v1 (Firebase)
+
+The 🌐 Online mode needs a free Firebase Realtime Database:
+
+1. Create a project at https://console.firebase.google.com (free Spark plan, no card).
+2. **Build → Realtime Database → Create Database** (start in test mode, US region).
+3. **Project settings → Your apps → Web app** → copy the config object.
+4. Paste it into `online.js` (replace the `FIREBASE_CONFIG` values).
+5. Recommended database rules (allow only room codes):
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$code": { ".read": true, ".write": true }
+    }
+  }
+}
+```
+
+Free tier headroom: ~50 KB per match and 2 concurrent connections — thousands of matches/month.
+
 ## Google AdSense checklist
 
 - [x] Original content (quiz questions)
