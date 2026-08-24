@@ -4,13 +4,13 @@
   "use strict";
 
   var FIREBASE_CONFIG = window.__FIREBASE_CONFIG__ || {
-    apiKey: "PASTE_YOUR_API_KEY",
-    authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://PASTE_YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "PASTE_YOUR_PROJECT",
-    storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
-    messagingSenderId: "PASTE_SENDER_ID",
-    appId: "PASTE_APP_ID"
+    apiKey: "AIzaSyCew8Kzr4wbZcb3Y3CK2Y5l9CadnlomPZw",
+    authDomain: "quizelite2.firebaseapp.com",
+    databaseURL: "https://quizelite2-default-rtdb.firebaseio.com",
+    projectId: "quizelite2",
+    storageBucket: "quizelite2.firebasestorage.app",
+    messagingSenderId: "148384751360",
+    appId: "1:148384751360:web:ef9e724038323e7cb61de5"
   };
 
   var db = null;
