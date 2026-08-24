@@ -647,6 +647,7 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
 }
 .feedback.ok { background: rgba(18, 161, 80, 0.12); border: 1px solid rgba(18, 161, 80, 0.4); }
 .feedback.no { background: rgba(228, 72, 92, 0.12); border: 1px solid rgba(228, 72, 92, 0.4); }
+.feedback.skip { background: rgba(123, 138, 255, 0.12); border: 1px solid rgba(123, 138, 255, 0.45); }
 .feedback-explain {
   margin-top: 8px;
   font-weight: 500;

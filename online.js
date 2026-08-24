@@ -169,6 +169,7 @@
           score: opp.score || 0,
           done: !!opp.done,
           correct: opp.correct || 0,
+          seq: opp.seq || 0,
         });
         if (started && opp.connected === false && !oppLeftFired) {
           oppLeftFired = true;
@@ -196,9 +197,13 @@
         });
       }
 
-      if (role === "host" && v.rematchReq && started) {
-        room.child("rematchReq").remove();
-        rematch();
+      if (v.rematch && started) {
+        var mineAcc = !!v.rematch[role];
+        var otherAcc = !!v.rematch[role === "host" ? "guest" : "host"];
+        emit("rematchUpdate", { mine: mineAcc, theirs: otherAcc });
+        if (mineAcc && otherAcc && role === "host") {
+          doRematch();
+        }
       }
     });
 
@@ -225,24 +230,21 @@
     });
   }
 
-  function sendProgress(idx, score, done, correct) {
+  function sendProgress(idx, score, done, correct, seq) {
     if (!room) return;
     room.child(role).update({
       idx: idx,
       score: score,
       done: !!done,
       correct: correct || 0,
+      seq: seq || 0,
     });
   }
 
   function rematch() {
     if (!room) return;
-    if (role === "host") {
-      doRematch();
-    } else {
-      room.child("rematchReq").set(true);
-      emit("waitingRematch");
-    }
+    room.child("rematch/" + role).set(true);
+    emit("waitingRematch");
   }
 
   function doRematch() {
@@ -258,9 +260,9 @@
       status: "playing",
       questions: qs,
       qv: (qv || 1) + 1,
-      rematchReq: null,
+      rematch: null,
       host: blankPlayer(),
-      guest: Object.assign(blankPlayer(), { connected: false }),
+      guest: blankPlayer(),
     });
   }
 

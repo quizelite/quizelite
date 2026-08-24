@@ -63,7 +63,7 @@
     duelQueue: null,
     duelScores: [0, 0],
     duelCorrect: [0, 0],
-    online: { active: false, oppIdx: 0, oppScore: 0, oppDone: false },
+    online: { active: false, oppIdx: 0, oppScore: 0, oppDone: false, oppSeq: 0, seq: 0 },
     queue: [],
     index: 0,
     score: 0,
@@ -259,8 +259,46 @@
     quizTimer.classList.toggle("urgent", state.timeLeft <= 10);
   }
 
-  function handleTimeout() {
-    if (state.answered) return;
+  function autoAdvance() {
+    state.answered = true;
+    stopTimer();
+    var buttons = answersEl.querySelectorAll(".answer-btn");
+    buttons.forEach(function (b) {
+      b.disabled = true;
+    });
+    state.streak = 0;
+    updateStreakUI();
+    sfx.click();
+
+    feedback.className = "feedback skip";
+    feedback.textContent = "⏩ Your rival was faster — keep up!";
+    feedback.classList.remove("hidden");
+
+    nextBtn.textContent =
+      state.index === state.queue.length - 1 ? "See Results →" : "Next Question →";
+    nextBtn.classList.remove("hidden");
+
+    setTimeout(function () {
+      if (
+        !state.answered ||
+        quizScreen.classList.contains("hidden") ||
+        state.mode !== "online"
+      ) {
+        return;
+      }
+      next();
+      // cascade: rival may already be ahead of the new question too
+      if (
+        state.online.active &&
+        !state.answered &&
+        state.online.oppIdx >= state.index
+      ) {
+        autoAdvance();
+      }
+    }, 1100);
+  }
+
+  function handleTimeout() {    if (state.answered) return;
     state.answered = true;
 
     var q = state.queue[state.index];
@@ -463,6 +501,8 @@
       state.online.oppIdx = 0;
       state.online.oppScore = 0;
       state.online.oppDone = false;
+      state.online.oppSeq = 0;
+      state.online.seq = 0;
       setOnlineStatus("");
       startQuiz(d.questions);
     });
@@ -471,9 +511,33 @@
       state.online.oppScore = d.score;
       state.online.oppDone = d.done;
       updateRivalChip();
+
+      // a fresh ANSWER from the rival on our current question rushes us
+      var isNewAnswer = d.seq > state.online.oppSeq;
+      if (isNewAnswer) state.online.oppSeq = d.seq;
+
+      if (
+        state.online.active &&
+        isNewAnswer &&
+        !state.answered &&
+        !d.done &&
+        !quizScreen.classList.contains("hidden") &&
+        d.idx >= state.index
+      ) {
+        autoAdvance();
+      }
+    });
+    QO.on("rematchUpdate", function (d) {
+      if (d.mine && d.theirs) {
+        setOnlineStatus("Both accepted — dealing new questions…");
+      } else if (d.mine) {
+        setOnlineStatus("You accepted — waiting for your rival… ⏳");
+      } else if (d.theirs) {
+        setOnlineStatus("Your rival wants a rematch — accept below! ⚔️");
+      }
     });
     QO.on("waitingRematch", function () {
-      setOnlineStatus("Rematch requested — waiting for the host…");
+      setOnlineStatus("Rematch requested — both players must accept ⚔️");
     });
     QO.on("opponentLeft", function () {
       if (!state.online.active) return;
@@ -601,7 +665,8 @@
     quizScoreEl.textContent = "Score: " + state.score;
 
     if (state.mode === "online" && QO) {
-      QO.sendProgress(state.index, state.score, false, state.correctCount);
+      state.online.seq++;
+      QO.sendProgress(state.index, state.score, false, state.correctCount, state.online.seq);
     }
 
     feedback.className = "feedback " + (isCorrect ? "ok" : "no");
@@ -694,6 +759,7 @@
 
     stopTimer();
     progressFill.style.width = "100%";
+    nextBtn.classList.add("hidden");
 
     if (state.mode === "duel") {
       state.duelScores[state.duelPlayer - 1] = state.score;
@@ -708,7 +774,9 @@
 
     if (state.mode === "online") {
       if (QO) {
-        QO.sendProgress(state.index, state.score, true, state.correctCount);
+        state.online.seq++;
+        QO.sendProgress(state.index, state.score, true, state.correctCount, state.online.seq);
+        setOnlineStatus("You finished — waiting for your rival… ⏳");
       }
       resultStatsEl.classList.add("hidden");
       document.getElementById("duel-scoreboard").classList.add("hidden");
@@ -910,11 +978,7 @@
   document.getElementById("retry-btn").addEventListener("click", function () {
     if (state.mode === "online") {
       if (QO) {
-        setOnlineStatus(
-          QO.role() === "host"
-            ? "Dealing new questions…"
-            : "Rematch requested — waiting for the host…"
-        );
+        setOnlineStatus("Rematch requested — both players must accept ⚔️");
         QO.rematch();
       }
       return;
