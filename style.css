@@ -312,7 +312,6 @@ main { padding: 44px 0 64px; flex: 1; }
   33%      { transform: translateY(-5px) rotate(0.25deg); }
   66%      { transform: translateY(3px) rotate(-0.2deg); }
 }
-}
 .card > * { position: relative; z-index: 1; }
 .hidden { display: none !important; }
 

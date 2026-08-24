@@ -33,6 +33,20 @@
       : "light");
   apply(initial);
 
+  function currentTheme() {
+    return root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  }
+
+  function bindButtons() {
+    document.querySelectorAll(".theme-toggle").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var next = currentTheme() === "dark" ? "light" : "dark";
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+        apply(next);
+      });
+    });
+  }
+
   function bindMenu() {
     var toggle = document.querySelector(".menu-toggle");
     var menu = document.getElementById("dropdown-menu");
