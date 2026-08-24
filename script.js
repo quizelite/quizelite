@@ -2,6 +2,10 @@
   "use strict";
 
   var QUESTIONS_PER_QUIZ = 10;
+  var TIME_LIMIT = 30;
+  var BEST_KEY = "quizelite-best";
+  var MUTED_KEY = "quizelite-muted";
+  var TIMED_KEY = "quizelite-timed";
 
   var startScreen = document.getElementById("start-screen");
   var quizScreen = document.getElementById("quiz-screen");
@@ -25,6 +29,11 @@
   var answersEl = document.getElementById("answers");
   var feedback = document.getElementById("feedback");
   var nextBtn = document.getElementById("next-btn");
+  var quizBot = document.getElementById("quiz-bot");
+  var streakChip = document.getElementById("streak-chip");
+  var quizTimer = document.getElementById("quiz-timer");
+  var timerToggle = document.getElementById("timer-toggle");
+  var soundToggle = document.getElementById("sound-toggle");
 
   var statScore = document.getElementById("stat-score");
   var statCorrect = document.getElementById("stat-correct");
@@ -41,12 +50,104 @@
     score: 0,
     correctCount: 0,
     answered: false,
+    streak: 0,
+    bestStreak: 0,
+    timed: false,
+    timeLeft: 0,
+    timerId: null,
   };
 
   var shareText = "";
 
-  var BEST_KEY = "quizelite-best";
+  // ===== Sound engine (WebAudio, no assets) =====
+  var audioCtx = null;
 
+  function isMuted() {
+    try {
+      return localStorage.getItem(MUTED_KEY) === "1";
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function ac() {
+    if (isMuted()) return null;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(freq, delay, dur, type, vol) {
+    var c = ac();
+    if (!c) return;
+    try {
+      var o = c.createOscillator();
+      var g = c.createGain();
+      var t0 = c.currentTime + delay;
+      o.type = type || "sine";
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(vol || 0.09, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g);
+      g.connect(c.destination);
+      o.start(t0);
+      o.stop(t0 + dur + 0.05);
+    } catch (e) {}
+  }
+
+  var sfx = {
+    click: function () {
+      tone(340, 0, 0.05, "square", 0.035);
+    },
+    correct: function () {
+      tone(523.25, 0, 0.09, "sine", 0.09);
+      tone(659.25, 0.08, 0.09, "sine", 0.09);
+      tone(783.99, 0.16, 0.2, "sine", 0.1);
+    },
+    wrong: function () {
+      tone(185, 0, 0.18, "sawtooth", 0.06);
+      tone(138, 0.16, 0.26, "sawtooth", 0.06);
+    },
+    victory: function () {
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach(function (f, i) {
+        tone(f, i * 0.13, 0.16, "triangle", 0.09);
+      });
+      tone(1318.5, 0.55, 0.4, "triangle", 0.1);
+      tone(1046.5, 0.55, 0.4, "sine", 0.07);
+    },
+    defeat: function () {
+      tone(329.63, 0, 0.26, "sine", 0.08);
+      tone(277.18, 0.24, 0.26, "sine", 0.08);
+      tone(220, 0.48, 0.45, "sine", 0.08);
+    },
+  };
+
+  function updateSoundIcon() {
+    if (!soundToggle) return;
+    soundToggle.textContent = isMuted() ? "🔇" : "🔊";
+    soundToggle.setAttribute(
+      "aria-label",
+      isMuted() ? "Unmute sounds" : "Mute sounds"
+    );
+  }
+
+  if (soundToggle) {
+    updateSoundIcon();
+    soundToggle.addEventListener("click", function () {
+      var muted = isMuted();
+      try {
+        localStorage.setItem(MUTED_KEY, muted ? "0" : "1");
+      } catch (e) {}
+      updateSoundIcon();
+      if (muted) sfx.click();
+    });
+  }
+
+  // ===== Best scores =====
   function bestKey() {
     return state.category + "|" + state.difficulty;
   }
@@ -68,7 +169,9 @@
     var bests = getBests();
     if (score > (bests[bestKey()] || 0)) {
       bests[bestKey()] = score;
-      try { localStorage.setItem(BEST_KEY, JSON.stringify(bests)); } catch (e) {}
+      try {
+        localStorage.setItem(BEST_KEY, JSON.stringify(bests));
+      } catch (e) {}
       return true;
     }
     return false;
@@ -89,6 +192,104 @@
     }
   }
 
+  // ===== Timer mode =====
+  function loadTimedPref() {
+    try {
+      state.timed = localStorage.getItem(TIMED_KEY) === "1";
+    } catch (e) {
+      state.timed = false;
+    }
+    syncTimedToggle();
+  }
+
+  function syncTimedToggle() {
+    if (!timerToggle) return;
+    timerToggle.classList.toggle("active", state.timed);
+    timerToggle.setAttribute("aria-pressed", String(state.timed));
+  }
+
+  function stopTimer() {
+    if (state.timerId) {
+      clearInterval(state.timerId);
+      state.timerId = null;
+    }
+    if (quizTimer) quizTimer.classList.add("hidden");
+  }
+
+  function startTimer() {
+    if (!state.timed || !quizTimer) return;
+    state.timeLeft = TIME_LIMIT;
+    quizTimer.classList.remove("hidden", "urgent");
+    renderTimeLeft();
+    state.timerId = setInterval(function () {
+      state.timeLeft--;
+      renderTimeLeft();
+      if (state.timeLeft <= 0) {
+        stopTimer();
+        handleTimeout();
+      }
+    }, 1000);
+  }
+
+  function renderTimeLeft() {
+    quizTimer.textContent = "⏱ " + state.timeLeft + "s";
+    quizTimer.classList.toggle("urgent", state.timeLeft <= 10);
+  }
+
+  function handleTimeout() {
+    if (state.answered) return;
+    state.answered = true;
+
+    var q = state.queue[state.index];
+    var buttons = answersEl.querySelectorAll(".answer-btn");
+    buttons.forEach(function (b) {
+      b.disabled = true;
+    });
+    buttons[q.correct].classList.add("correct");
+
+    state.streak = 0;
+    updateStreakUI();
+    setBotFace("sad");
+    sfx.wrong();
+
+    feedback.className = "feedback no";
+    feedback.textContent =
+      "⏱ Time's up! The correct answer is: " + q.answers[q.correct];
+    if (q.explain) {
+      var explainEl = document.createElement("p");
+      explainEl.className = "feedback-explain";
+      explainEl.textContent = "💡 " + q.explain;
+      feedback.appendChild(explainEl);
+    }
+    feedback.classList.remove("hidden");
+
+    nextBtn.textContent =
+      state.index === state.queue.length - 1 ? "See Results →" : "Next Question →";
+    nextBtn.classList.remove("hidden");
+  }
+
+  // ===== Streak =====
+  function updateStreakUI() {
+    if (!streakChip) return;
+    if (state.streak >= 2) {
+      streakChip.textContent = "🔥 " + state.streak;
+      streakChip.classList.remove("hidden");
+      streakChip.classList.remove("pop");
+      void streakChip.offsetWidth;
+      streakChip.classList.add("pop");
+    } else {
+      streakChip.classList.add("hidden");
+    }
+  }
+
+  // ===== Bot face =====
+  function setBotFace(mood) {
+    if (!quizBot) return;
+    quizBot.classList.remove("bot-happy", "bot-sad");
+    if (mood) quizBot.classList.add("bot-" + mood);
+  }
+
+  // ===== Core quiz =====
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -174,15 +375,19 @@
     var pool = availableQuestions();
     if (pool.length === 0) return;
 
+    stopTimer();
     state.queue = shuffle(pool).slice(0, QUESTIONS_PER_QUIZ);
     state.index = 0;
     state.score = 0;
     state.correctCount = 0;
+    state.streak = 0;
+    state.bestStreak = 0;
 
     quizCategory.textContent =
       (state.category === "all" ? "Mixed" : state.category) +
       " · " +
-      state.difficulty;
+      state.difficulty +
+      (state.timed ? " · timed" : "");
 
     show(quizScreen);
     renderQuestion();
@@ -191,6 +396,8 @@
   function renderQuestion() {
     var q = state.queue[state.index];
     state.answered = false;
+    setBotFace(null);
+    updateStreakUI();
 
     quizProgress.textContent = "Question " + (state.index + 1) + "/" + state.queue.length;
     quizScoreEl.textContent = "Score: " + state.score;
@@ -213,11 +420,15 @@
       });
       answersEl.appendChild(btn);
     });
+
+    stopTimer();
+    startTimer();
   }
 
   function answer(choiceIndex, btn) {
     if (state.answered) return;
     state.answered = true;
+    stopTimer();
 
     var q = state.queue[state.index];
     var buttons = answersEl.querySelectorAll(".answer-btn");
@@ -229,11 +440,19 @@
     if (isCorrect) {
       state.score += q.difficulty === "hard" ? 15 : q.difficulty === "medium" ? 10 : 5;
       state.correctCount++;
+      state.streak++;
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
       btn.classList.add("correct");
+      setBotFace("happy");
+      sfx.correct();
     } else {
+      state.streak = 0;
       btn.classList.add("wrong");
       buttons[q.correct].classList.add("correct");
+      setBotFace("sad");
+      sfx.wrong();
     }
+    updateStreakUI();
 
     quizScoreEl.textContent = "Score: " + state.score;
 
@@ -265,10 +484,68 @@
     }
   }
 
+  // ===== Confetti =====
+  function launchConfetti(host) {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    var cv = document.createElement("canvas");
+    cv.className = "confetti-canvas";
+    cv.width = host.clientWidth;
+    cv.height = host.clientHeight;
+    host.appendChild(cv);
+    var ctx2d = cv.getContext && cv.getContext("2d");
+    if (!ctx2d) {
+      cv.remove();
+      return;
+    }
+    var colors = ["#7b8aff", "#b57bff", "#3ddc84", "#ffd166", "#ff6b7d"];
+    var parts = [];
+    for (var i = 0; i < 140; i++) {
+      parts.push({
+        x: Math.random() * cv.width,
+        y: -20 - Math.random() * cv.height * 0.5,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        vy: 2 + Math.random() * 3.2,
+        vx: -1.5 + Math.random() * 3,
+        rot: Math.random() * Math.PI,
+        vr: -0.12 + Math.random() * 0.24,
+        c: colors[i % colors.length],
+      });
+    }
+    var start = performance.now();
+    function frame(t) {
+      ctx2d.clearRect(0, 0, cv.width, cv.height);
+      parts.forEach(function (p) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        ctx2d.save();
+        ctx2d.translate(p.x, p.y);
+        ctx2d.rotate(p.rot);
+        ctx2d.fillStyle = p.c;
+        ctx2d.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx2d.restore();
+      });
+      if (t - start < 2800) {
+        requestAnimationFrame(frame);
+      } else {
+        cv.remove();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
   function showResults() {
     var total = state.queue.length;
     var percent = Math.round((state.correctCount / total) * 100);
     var isRecord = saveBestIfRecord(state.score);
+
+    stopTimer();
 
     progressFill.style.width = "100%";
 
@@ -314,17 +591,31 @@
       " pts) — " +
       tier +
       " Can you beat me?";
+    if (state.bestStreak >= 3) {
+      shareText += " 🔥 Best streak: " + state.bestStreak;
+    }
+
+    if (percent >= 90) {
+      launchConfetti(resultsScreen);
+      sfx.victory();
+    } else if (percent >= 50) {
+      sfx.victory();
+    } else {
+      sfx.defeat();
+    }
 
     show(resultsScreen);
   }
 
-  // Events
-  document.getElementById("start-btn").addEventListener("click", startQuiz);
+  // ===== Events =====
+  document.getElementById("start-btn").addEventListener("click", function () {
+    sfx.click();
+    startQuiz();
+  });
   nextBtn.addEventListener("click", next);
-  document
-    .getElementById("retry-btn")
-    .addEventListener("click", startQuiz);
+  document.getElementById("retry-btn").addEventListener("click", startQuiz);
   document.getElementById("home-btn").addEventListener("click", function () {
+    stopTimer();
     updateBestInfo();
     show(startScreen);
   });
@@ -346,6 +637,18 @@
     }
   });
 
+  if (timerToggle) {
+    timerToggle.addEventListener("click", function () {
+      state.timed = !state.timed;
+      try {
+        localStorage.setItem(TIMED_KEY, state.timed ? "1" : "0");
+      } catch (e) {}
+      syncTimedToggle();
+      sfx.click();
+      updateCountInfo();
+    });
+  }
+
   diffButtons.forEach(function (btn) {
     btn.addEventListener("click", function () {
       diffButtons.forEach(function (b) {
@@ -353,6 +656,7 @@
       });
       btn.classList.add("active");
       state.difficulty = btn.dataset.difficulty;
+      sfx.click();
       updateCountInfo();
     });
   });
@@ -367,6 +671,7 @@
     chip.addEventListener("click", function () {
       categorySelect.value = chip.dataset.category;
       state.category = chip.dataset.category;
+      sfx.click();
       updateCountInfo();
     });
   });
@@ -402,6 +707,7 @@
   // Logo "QuizElite": back to the quiz start screen (same page, no reload)
   document.querySelector(".logo").addEventListener("click", function (e) {
     e.preventDefault();
+    stopTimer();
     show(startScreen);
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -447,6 +753,7 @@
     q.correct = pos;
   });
 
+  loadTimedPref();
   populateCategories();
   document.getElementById("year").textContent = new Date().getFullYear();
 })();
