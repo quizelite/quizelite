@@ -51,17 +51,32 @@
     var toggle = document.querySelector(".menu-toggle");
     var menu = document.getElementById("dropdown-menu");
     if (!toggle || !menu) return;
-    toggle.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var open = menu.classList.toggle("open");
+
+    function setOpen(open) {
+      menu.classList.toggle("open", open);
       toggle.classList.toggle("open", open);
       toggle.setAttribute("aria-expanded", String(open));
+    }
+
+    toggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(!menu.classList.contains("open"));
     });
+
+    var closeBtn = menu.querySelector(".menu-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        setOpen(false);
+      });
+    }
+
     document.addEventListener("click", function (e) {
-      if (!menu.contains(e.target) && !toggle.contains(e.target)) {
-        menu.classList.remove("open");
-        toggle.classList.remove("open");
-        toggle.setAttribute("aria-expanded", "false");
+      if (
+        menu.classList.contains("open") &&
+        !menu.contains(e.target) &&
+        !toggle.contains(e.target)
+      ) {
+        setOpen(false);
       }
     });
   }
