@@ -39,11 +39,21 @@
   var timerToggle = document.getElementById("timer-toggle");
   var soundToggle = document.getElementById("sound-toggle");
   var onlinePanel = document.getElementById("online-panel");
+  var onlineName = document.getElementById("online-name");
   var onlineCreate = document.getElementById("online-create");
   var onlineJoin = document.getElementById("online-join");
   var onlineCode = document.getElementById("online-code");
   var onlineStatus = document.getElementById("online-status");
   var rivalChip = document.getElementById("rival-chip");
+  var lobbyScreen = document.getElementById("lobby-screen");
+  var lobbyCode = document.getElementById("lobby-code");
+  var lobbyCopy = document.getElementById("lobby-copy");
+  var lobbyCount = document.getElementById("lobby-count");
+  var lobbyPlayers = document.getElementById("lobby-players");
+  var lobbyStart = document.getElementById("lobby-start");
+  var lobbyWaiting = document.getElementById("lobby-waiting");
+  var lobbyLeave = document.getElementById("lobby-leave");
+  var onlineRanking = document.getElementById("online-ranking");
 
   var QO = window.QuizOnline || null;
 
@@ -63,7 +73,7 @@
     duelQueue: null,
     duelScores: [0, 0],
     duelCorrect: [0, 0],
-    online: { active: false, oppIdx: 0, oppScore: 0, oppDone: false, oppSeq: 0, seq: 0 },
+    online: { active: false, players: [], rushMax: 0, seq: 0 },
     queue: [],
     index: 0,
     score: 0,
@@ -287,11 +297,11 @@
         return;
       }
       next();
-      // cascade: rival may already be ahead of the new question too
+      // cascade: faster players may already be ahead of the new question too
       if (
         state.online.active &&
         !state.answered &&
-        state.online.oppIdx >= state.index
+        state.online.rushMax >= state.index
       ) {
         autoAdvance();
       }
@@ -431,7 +441,7 @@
   }
 
   function show(screen) {
-    [startScreen, quizScreen, passScreen, resultsScreen].forEach(function (s) {
+    [startScreen, quizScreen, passScreen, lobbyScreen, resultsScreen].forEach(function (s) {
       s.classList.add("hidden");
     });
     screen.classList.remove("hidden");
@@ -453,18 +463,27 @@
     }
   }
 
-  function updateRivalChip() {
+  function updateLeaderChip() {
     if (!rivalChip) return;
     if (!state.online.active) {
       rivalChip.classList.add("hidden");
       return;
     }
+    var connected = state.online.players.filter(function (p) {
+      return p.connected;
+    });
+    if (!connected.length) {
+      rivalChip.classList.add("hidden");
+      return;
+    }
+    var leader = connected.reduce(function (a, b) {
+      return b.score > a.score ? b : a;
+    });
     rivalChip.classList.remove("hidden");
-    if (state.online.oppDone) {
-      rivalChip.textContent = "Rival finished! ✓ " + state.online.oppScore + " pts";
+    if (leader.id === QO.me()) {
+      rivalChip.textContent = "👑 You lead · " + leader.score + " pts";
     } else {
-      rivalChip.textContent =
-        "Rival · Q" + (state.online.oppIdx + 1) + " · " + state.online.oppScore + " pts";
+      rivalChip.textContent = "👑 " + leader.name + " · " + leader.score + " pts";
     }
   }
 
@@ -483,78 +502,154 @@
       });
   }
 
+  function buildLobby(d) {
+    show(lobbyScreen);
+    lobbyCode.textContent = d.code;
+    lobbyCount.textContent = d.players.length + "/" + d.max + " players";
+    lobbyPlayers.innerHTML = "";
+    d.players.forEach(function (p) {
+      var chip = document.createElement("span");
+      chip.className = "lobby-player" + (p.connected ? "" : " left");
+      chip.textContent =
+        (p.id === d.hostId ? "👑 " : "") +
+        p.name +
+        (p.id === d.me ? " (you)" : "") +
+        (p.connected ? "" : " (left)");
+      lobbyPlayers.appendChild(chip);
+    });
+    var isHost = d.me === d.hostId;
+    lobbyStart.classList.toggle("hidden", !isHost);
+    if (isHost) {
+      lobbyStart.disabled = d.players.length < 1;
+      lobbyStart.textContent = "Start Match ⚔️ (" + d.players.length + " players)";
+    }
+    lobbyWaiting.classList.toggle("hidden", isHost);
+    lobbyCopy.classList.remove("hidden");
+  }
+
+  function showOnlineRanking(players, me) {
+    resultStatsEl.classList.add("hidden");
+    document.getElementById("duel-scoreboard").classList.add("hidden");
+    document.getElementById("duel-winner").classList.add("hidden");
+
+    var ranked = players
+      .filter(function (p) {
+        return p.connected;
+      })
+      .sort(function (a, b) {
+        return b.score - a.score || b.correct - a.correct;
+      });
+
+    onlineRanking.classList.remove("hidden");
+    onlineRanking.innerHTML = "";
+    var myRank = 1;
+    ranked.forEach(function (p, i) {
+      var row = document.createElement("div");
+      row.className = "rank-row" + (p.id === me ? " me" : "");
+      var medal = ["🥇", "🥈", "🥉"][i] || "#" + (i + 1);
+      if (p.id === me) myRank = i + 1;
+      row.innerHTML =
+        '<span class="rank-pos">' + medal + '</span>' +
+        '<span class="rank-name">' + p.name + (p.id === me ? " (you)" : "") + '</span>' +
+        '<span class="rank-pts">' + p.score + ' pts</span>' +
+        '<span class="rank-correct">' + p.correct + '/' + state.queue.length + '</span>';
+      onlineRanking.appendChild(row);
+    });
+
+    var total = ranked.length;
+    var suffix = (state.category === "all" ? "Mixed" : state.category) + " · " + state.difficulty;
+    var retryBtn = document.getElementById("retry-btn");
+
+    if (myRank === 1) {
+      resultEmoji.textContent = "🏆";
+      resultTitle.textContent = "You won the lobby!";
+      resultMessage.textContent = "Best of " + total + " players in " + suffix + ".";
+      launchConfetti(resultsScreen);
+      sfx.victory();
+      shareText = "I won a " + total + "-player QuizElite lobby with " + state.score + " pts 🏆 Beat me!";
+    } else if (myRank === total) {
+      resultEmoji.textContent = "💀";
+      resultTitle.textContent = "Last place…";
+      resultMessage.textContent = "Only up from here. You got " + state.score + " pts in " + suffix + ".";
+      sfx.defeat();
+      shareText = "I finished #" + myRank + " of " + total + " at QuizElite 😅 Rematch?";
+    } else {
+      resultEmoji.textContent = "🎯";
+      resultTitle.textContent = "You finished #" + myRank + " of " + total;
+      resultMessage.textContent = state.score + " pts in " + suffix + ". Push for the podium!";
+      sfx.victory();
+      shareText = "I finished #" + myRank + " of " + total + " with " + state.score + " pts at QuizElite 🌐 Can you beat me?";
+    }
+
+    var isHost = QO.role() === "host";
+    retryBtn.classList.toggle("hidden", !isHost);
+    retryBtn.textContent = "Rematch (all) 🌐";
+
+    show(resultsScreen);
+  }
+
   function wireOnline() {
     if (!QO) return;
     QO.setQuestionGenerator(buildOnlineQuestions);
 
     QO.on("created", function (c) {
-      setOnlineStatus("📡 Room " + c + " — share this code with your rival!");
+      setOnlineStatus("📡 Lobby " + c + " created — share the code!");
     });
     QO.on("joined", function (d) {
-      setOnlineStatus("📡 Joined room " + d.code + " — waiting for the host to start…");
+      setOnlineStatus("📡 Joined lobby " + d.code + " — waiting for the host…");
     });
     QO.on("error", function (msg) {
       setOnlineStatus("⚠️ " + msg, true);
     });
+    QO.on("lobby", function (d) {
+      state.online.active = false;
+      buildLobby(d);
+    });
+    QO.on("backToLobby", function () {
+      setOnlineStatus("");
+    });
     QO.on("start", function (d) {
       state.online.active = true;
-      state.online.oppIdx = 0;
-      state.online.oppScore = 0;
-      state.online.oppDone = false;
-      state.online.oppSeq = 0;
+      state.online.players = d.players || [];
+      state.online.rushMax = 0;
       state.online.seq = 0;
       setOnlineStatus("");
       startQuiz(d.questions);
     });
-    QO.on("progress", function (d) {
-      state.online.oppIdx = d.idx;
-      state.online.oppScore = d.score;
-      state.online.oppDone = d.done;
-      updateRivalChip();
+    QO.on("players", function (d) {
+      state.online.players = d.players || [];
+      updateLeaderChip();
 
-      // a fresh ANSWER from the rival on our current question rushes us
-      var isNewAnswer = d.seq > state.online.oppSeq;
-      if (isNewAnswer) state.online.oppSeq = d.seq;
+      var me = QO.me();
+      var rush = 0;
+      state.online.players.forEach(function (p) {
+        if (p.id !== me && p.connected && !p.done && p.idx > rush) {
+          rush = p.idx;
+        }
+      });
+      state.online.rushMax = rush;
 
       if (
         state.online.active &&
-        isNewAnswer &&
         !state.answered &&
-        !d.done &&
         !quizScreen.classList.contains("hidden") &&
-        d.idx >= state.index
+        rush > state.index
       ) {
         autoAdvance();
       }
     });
-    QO.on("rematchUpdate", function (d) {
-      if (d.mine && d.theirs) {
-        setOnlineStatus("Both accepted — dealing new questions…");
-      } else if (d.mine) {
-        setOnlineStatus("You accepted — waiting for your rival… ⏳");
-      } else if (d.theirs) {
-        setOnlineStatus("Your rival wants a rematch — accept below! ⚔️");
-      }
-    });
-    QO.on("waitingRematch", function () {
-      setOnlineStatus("Rematch requested — both players must accept ⚔️");
-    });
-    QO.on("opponentLeft", function () {
+    QO.on("allDone", function (d) {
       if (!state.online.active) return;
       state.online.active = false;
-      stopTimer();
-      showOnlineResults(
-        { score: state.score, correct: state.correctCount },
-        { score: state.online.oppScore, correct: 0 },
-        true
-      );
+      showOnlineRanking(d.players, QO.me());
     });
-    QO.on("bothDone", function (d) {
-      if (!state.online.active) return;
+    QO.on("hostLeft", function () {
+      if (!state.online.active && lobbyScreen.classList.contains("hidden")) return;
+      QO.leave();
       state.online.active = false;
-      var mine = QO.role() === "host" ? d.host : d.guest;
-      var theirs = QO.role() === "host" ? d.guest : d.host;
-      showOnlineResults(mine, theirs, false);
+      show(startScreen);
+      setOnlineUI(true);
+      setOnlineStatus("The host left the room.", true);
     });
   }
 
@@ -596,7 +691,7 @@
       state.difficulty +
       (state.timed ? " · timed" : "");
 
-    updateRivalChip();
+    updateLeaderChip();
     show(quizScreen);
     renderQuestion();
   }
@@ -776,15 +871,18 @@
       if (QO) {
         state.online.seq++;
         QO.sendProgress(state.index, state.score, true, state.correctCount, state.online.seq);
-        setOnlineStatus("You finished — waiting for your rival… ⏳");
+        setOnlineStatus("You finished — waiting for the others… ⏳");
       }
       resultStatsEl.classList.add("hidden");
       document.getElementById("duel-scoreboard").classList.add("hidden");
       document.getElementById("duel-winner").classList.add("hidden");
-      document.getElementById("retry-btn").classList.add("hidden");
+      onlineRanking.classList.add("hidden");
+      var isHost = QO && QO.role() === "host";
+      document.getElementById("retry-btn").classList.toggle("hidden", !isHost);
+      document.getElementById("retry-btn").textContent = "Rematch (all) 🌐";
       resultEmoji.textContent = "⏳";
       resultTitle.textContent = "You finished!";
-      resultMessage.textContent = state.score + " pts — waiting for your rival…";
+      resultMessage.textContent = state.score + " pts — waiting for the rest…";
       show(resultsScreen);
       return;
     }
@@ -912,63 +1010,6 @@
     state.duelPlayer = 1;
   }
 
-  function showOnlineResults(mine, theirs, rivalLeft) {
-    resultStatsEl.classList.add("hidden");
-    var scoreboard = document.getElementById("duel-scoreboard");
-    scoreboard.classList.remove("hidden");
-    var names = document.querySelectorAll(".duel-name");
-    names[0].textContent = "You";
-    names[1].textContent = "Rival";
-    document.getElementById("duel-p1").textContent = mine.score;
-    document.getElementById("duel-p2").textContent = theirs.score;
-    document.getElementById("duel-correct1").textContent =
-      mine.correct + "/" + state.queue.length + " correct";
-    document.getElementById("duel-correct2").textContent = rivalLeft
-      ? "left the match"
-      : theirs.correct + "/" + state.queue.length + " correct";
-
-    var winnerEl = document.getElementById("duel-winner");
-    var suffix = (state.category === "all" ? "Mixed" : state.category) + " · " + state.difficulty;
-
-    if (rivalLeft) {
-      winnerEl.textContent = "🏆 You win — rival left!";
-      resultEmoji.textContent = "🚶";
-      resultTitle.textContent = "Victory by walkout!";
-      resultMessage.textContent = "Your rival disconnected. " + mine.score + " pts were enough.";
-      sfx.victory();
-      shareText = "My rival fled the QuizElite duel 🏃 I had " + mine.score + " pts. Dare to play me?";
-    } else if (mine.score > theirs.score) {
-      winnerEl.textContent = "🏆 You win!";
-      resultEmoji.textContent = "🥇";
-      resultTitle.textContent = "You took the online duel!";
-      resultMessage.textContent = mine.score + " vs " + theirs.score + " pts in " + suffix + ".";
-      launchConfetti(resultsScreen);
-      sfx.victory();
-      shareText = "I won the online duel " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Play me!";
-    } else if (theirs.score > mine.score) {
-      winnerEl.textContent = "💀 Rival wins";
-      resultEmoji.textContent = "😤";
-      resultTitle.textContent = "So close…";
-      resultMessage.textContent = theirs.score + " vs your " + mine.score + " pts in " + suffix + ". Rematch?";
-      sfx.defeat();
-      shareText = "I lost the online duel " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Revenge?";
-    } else {
-      winnerEl.textContent = "🤝 It's a tie!";
-      resultEmoji.textContent = "⚖️";
-      resultTitle.textContent = "Perfectly matched!";
-      resultMessage.textContent = mine.score + " pts each in " + suffix + ".";
-      sfx.victory();
-      shareText = "We tied " + mine.score + "-" + theirs.score + " at QuizElite 🌐 Beat us both!";
-    }
-    winnerEl.classList.remove("hidden");
-
-    var retryBtn = document.getElementById("retry-btn");
-    retryBtn.textContent = "Rematch 🌐";
-    retryBtn.classList.remove("hidden");
-
-    show(resultsScreen);
-  }
-
   // ===== Events =====
   document.getElementById("start-btn").addEventListener("click", function () {
     sfx.click();
@@ -978,7 +1019,7 @@
   document.getElementById("retry-btn").addEventListener("click", function () {
     if (state.mode === "online") {
       if (QO) {
-        setOnlineStatus("Rematch requested — both players must accept ⚔️");
+        setOnlineStatus("Restarting the lobby for everyone…");
         QO.rematch();
       }
       return;
@@ -1019,18 +1060,62 @@
       updateCountInfo();
     });
   });
+  function leaveOnlineToPanel(msg) {
+    stopTimer();
+    if (QO) QO.leave();
+    state.online.active = false;
+    resetDuel();
+    setOnlineUI(true);
+    setOnlineStatus(msg || "");
+    updateBestInfo();
+    show(startScreen);
+  }
+
   document.getElementById("home-btn").addEventListener("click", function () {
+    if (state.mode === "online") {
+      leaveOnlineToPanel("Left the match. Create or join another lobby.");
+      return;
+    }
     stopTimer();
     resetDuel();
-    if (state.mode === "online" && QO) {
-      QO.leave();
-      state.online.active = false;
-      setOnlineUI(true);
-      setOnlineStatus("Left the match. Create or join another room.");
-    }
     updateBestInfo();
     show(startScreen);
   });
+
+  if (lobbyStart) {
+    lobbyStart.addEventListener("click", function () {
+      sfx.click();
+      lobbyStart.disabled = true;
+      lobbyStart.textContent = "Starting…";
+      if (QO) QO.startMatch();
+    });
+  }
+
+  if (lobbyLeave) {
+    lobbyLeave.addEventListener("click", function () {
+      sfx.click();
+      leaveOnlineToPanel("You left the lobby.");
+    });
+  }
+
+  if (lobbyCopy) {
+    lobbyCopy.addEventListener("click", function () {
+      var codeText = lobbyCode ? lobbyCode.textContent : "";
+      var url =
+        location.origin +
+        location.pathname +
+        "?room=" +
+        codeText;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function () {
+          lobbyCopy.textContent = "✓ Copied!";
+          setTimeout(function () {
+            lobbyCopy.textContent = "📋 Copy invite";
+          }, 1600);
+        });
+      }
+    });
+  }
 
   document.getElementById("share-btn").addEventListener("click", function () {
     var btn = this;
@@ -1120,12 +1205,12 @@
   // Logo "QuizElite": back to the quiz start screen (same page, no reload)
   document.querySelector(".logo").addEventListener("click", function (e) {
     e.preventDefault();
+    if (state.mode === "online") {
+      leaveOnlineToPanel("");
+      return;
+    }
     stopTimer();
     resetDuel();
-    if (QO) {
-      QO.leave();
-      state.online.active = false;
-    }
     show(startScreen);
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -1164,20 +1249,24 @@
   if (onlineCreate) {
     onlineCreate.addEventListener("click", function () {
       sfx.click();
-      if (QO) {
-        QO.createRoom(buildOnlineQuestions(), {
-          category: state.category,
-          difficulty: state.difficulty,
-          timed: state.timed,
-        });
-      }
+      if (!QO) return;
+      var name = (onlineName.value || "").trim() || "Player";
+      try { localStorage.setItem("quizelite-name", name); } catch (e) {}
+      QO.createRoom(name, buildOnlineQuestions(), {
+        category: state.category,
+        difficulty: state.difficulty,
+        timed: state.timed,
+      });
     });
   }
 
   if (onlineJoin) {
     onlineJoin.addEventListener("click", function () {
       sfx.click();
-      if (QO) QO.joinRoom(onlineCode.value);
+      if (!QO) return;
+      var name = (onlineName.value || "").trim() || "Player";
+      try { localStorage.setItem("quizelite-name", name); } catch (e) {}
+      QO.joinRoom(onlineCode.value, name);
     });
   }
 
@@ -1188,6 +1277,22 @@
   }
 
   wireOnline();
+
+  // Prefill saved player name
+  try {
+    var savedName = localStorage.getItem("quizelite-name");
+    if (savedName && onlineName) onlineName.value = savedName;
+  } catch (e) {}
+
+  // Invite links: ?room=CODE prefills the online panel
+  try {
+    var roomParam = new URLSearchParams(window.location.search).get("room");
+    if (roomParam && onlineCode) {
+      document.querySelector('[data-mode="online"]').click();
+      onlineCode.value = roomParam.toUpperCase();
+      setOnlineStatus("Invite for room " + roomParam.toUpperCase() + " — enter your name and join!");
+    }
+  } catch (e) {}
 
   // Init
   // Place the correct answer at a random position in each question (once at startup)

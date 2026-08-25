@@ -1,5 +1,4 @@
-// QuizElite — online 1v1 via Firebase Realtime Database
-// PASTE YOUR FIREBASE WEB CONFIG BELOW (console.firebase.google.com → Project settings → Your apps)
+// QuizElite — online multiplayer lobby via Firebase Realtime Database (up to 40 players)
 (function () {
   "use strict";
 
@@ -13,14 +12,14 @@
     appId: "1:148384751360:web:ef9e724038323e7cb61de5"
   };
 
+  var MAX_PLAYERS = 40;
+
   var db = null;
   var room = null;
   var code = null;
   var role = null;
+  var pid = null;
   var started = false;
-  var qv = null;
-  var oppLeftFired = false;
-  var roomStatus = "waiting";
   var cbs = {};
   var questionGen = null;
 
@@ -45,13 +44,28 @@
     questionGen = fn;
   }
 
-  function genCode() {
+  function randId(len) {
     var chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     var s = "";
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < len; i++) {
       s += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return s;
+  }
+
+  function getPid() {
+    if (window.__PID_OVERRIDE__) return window.__PID_OVERRIDE__;
+    var fallback = randId(10);
+    try {
+      var p = sessionStorage.getItem("quizelite-pid");
+      if (!p) {
+        p = fallback;
+        sessionStorage.setItem("quizelite-pid", p);
+      }
+      return p;
+    } catch (e) {
+      return fallback;
+    }
   }
 
   function ensureDb() {
@@ -70,32 +84,59 @@
     }
   }
 
-  function blankPlayer() {
-    return { connected: true, idx: 0, score: 0, done: false, correct: 0 };
+  function mkPlayer(name) {
+    return {
+      name: String(name || "Player").slice(0, 14),
+      connected: true,
+      idx: 0,
+      score: 0,
+      done: false,
+      correct: 0,
+      seq: 0,
+      joinedAt: firebase.database.ServerValue.TIMESTAMP,
+    };
   }
 
-  function createRoom(questions, settings) {
+  function playersArray(v) {
+    var arr = [];
+    var ps = v.players || {};
+    Object.keys(ps).forEach(function (k) {
+      var p = ps[k];
+      p.id = k;
+      arr.push(p);
+    });
+    arr.sort(function (a, b) {
+      return (a.joinedAt || 0) - (b.joinedAt || 0);
+    });
+    return arr;
+  }
+
+  function detach() {
+    if (room) room.off();
+  }
+
+  function createRoom(name, questions, settings) {
     if (!ensureDb()) return;
     detach();
     role = "host";
+    pid = getPid();
     started = false;
-    qv = null;
-    oppLeftFired = false;
-    roomStatus = "waiting";
-    code = genCode();
+    code = randId(5);
     room = db.ref("rooms/" + code);
+    var players = {};
+    players[pid] = mkPlayer(name);
     room
       .set({
-        status: "waiting",
+        status: "lobby",
         qv: 1,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         questions: questions,
         settings: settings,
-        host: blankPlayer(),
-        guest: Object.assign(blankPlayer(), { connected: false }),
+        hostId: pid,
+        players: players,
       })
       .then(function () {
-        room.child("host/connected").onDisconnect().set(false);
+        room.child("players/" + pid + "/connected").onDisconnect().set(false);
         emit("created", code);
         watch();
       })
@@ -104,14 +145,12 @@
       });
   }
 
-  function joinRoom(rawCode) {
+  function joinRoom(rawCode, name) {
     if (!ensureDb()) return;
     detach();
     role = "guest";
+    pid = getPid();
     started = false;
-    qv = null;
-    oppLeftFired = false;
-    roomStatus = "waiting";
     code = String(rawCode || "").toUpperCase().trim();
     if (!code) {
       emit("error", "Enter a room code first.");
@@ -121,18 +160,23 @@
     room
       .once("value")
       .then(function (snap) {
-        var val = snap.val();
-        if (!val) {
+        var v = snap.val();
+        if (!v) {
           emit("error", "Room " + code + " not found.");
           return;
         }
-        if (val.status !== "waiting" || (val.guest && val.guest.connected)) {
-          emit("error", "That room is full or already started.");
+        if (v.status !== "lobby") {
+          emit("error", "That match already started — ask for a new room.");
           return;
         }
-        room.child("guest").set(blankPlayer());
-        room.child("guest/connected").onDisconnect().set(false);
-        emit("joined", { code: code, settings: val.settings });
+        var count = Object.keys(v.players || {}).length;
+        if (count >= MAX_PLAYERS) {
+          emit("error", "Room is full (" + MAX_PLAYERS + " players).");
+          return;
+        }
+        room.child("players/" + pid).set(mkPlayer(name));
+        room.child("players/" + pid + "/connected").onDisconnect().set(false);
+        emit("joined", { code: code });
         watch();
       })
       .catch(function (e) {
@@ -140,99 +184,65 @@
       });
   }
 
-  function detach() {
-    if (room) room.off();
-  }
-
   function watch() {
-    room.child("guest/connected").on("value", function (s) {
-      if (role === "host" && s.val() === true && roomStatus === "waiting") {
-        room.child("status").set("playing");
-      }
-    });
-
     room.on("value", function (snap) {
       var v = snap.val();
       if (!v) {
-        if (!oppLeftFired) {
-          oppLeftFired = true;
-          emit("opponentLeft");
-        }
+        emit("hostLeft");
         return;
       }
-      roomStatus = v.status || "waiting";
 
-      var opp = role === "host" ? v.guest : v.host;
-      if (opp) {
-        emit("progress", {
-          idx: opp.idx || 0,
-          score: opp.score || 0,
-          done: !!opp.done,
-          correct: opp.correct || 0,
-          seq: opp.seq || 0,
-        });
-        if (started && opp.connected === false && !oppLeftFired) {
-          oppLeftFired = true;
-          emit("opponentLeft");
-        }
-      }
+      var arr = playersArray(v);
 
-      if (
-        roomStatus === "playing" &&
-        !started &&
-        v.questions &&
-        v.host &&
-        v.host.connected &&
-        v.guest &&
-        v.guest.connected
-      ) {
-        started = true;
-        emit("start", { questions: v.questions, settings: v.settings });
-      }
-
-      if (v.host && v.host.done && v.guest && v.guest.done) {
-        emit("bothDone", {
-          host: { score: v.host.score || 0, correct: v.host.correct || 0 },
-          guest: { score: v.guest.score || 0, correct: v.guest.correct || 0 },
+      if (v.status === "lobby") {
+        started = false;
+        emit("lobby", {
+          code: code,
+          players: arr,
+          hostId: v.hostId,
+          me: pid,
+          settings: v.settings,
+          max: MAX_PLAYERS,
         });
       }
 
-      if (v.rematch && started) {
-        var mineAcc = !!v.rematch[role];
-        var otherAcc = !!v.rematch[role === "host" ? "guest" : "host"];
-        emit("rematchUpdate", { mine: mineAcc, theirs: otherAcc });
-        if (mineAcc && otherAcc && role === "host") {
-          doRematch();
-        }
-      }
-    });
-
-    room.child("qv").on("value", function (s) {
-      if (!s.exists()) return;
-      var val = s.val();
-      if (qv === null) {
-        qv = val;
-        return;
-      }
-      if (val !== qv) {
-        qv = val;
+      if (v.status === "playing" && !started && v.questions) {
         started = true;
-        room
-          .once("value")
-          .then(function (snap) {
-            emit("start", {
-              questions: snap.val().questions,
-              settings: snap.val().settings,
-              rematch: true,
-            });
+        emit("start", { questions: v.questions, settings: v.settings, players: arr });
+      }
+
+      if (started) {
+        emit("players", { players: arr, hostId: v.hostId, me: pid });
+
+        var connected = arr.filter(function (p) {
+          return p.connected;
+        });
+        var allDone =
+          connected.length > 0 &&
+          connected.every(function (p) {
+            return p.done;
           });
+        if (allDone) {
+          emit("allDone", { players: arr });
+        }
+
+        var hostP = v.players && v.players[v.hostId];
+        if (!hostP || hostP.connected === false) {
+          emit("hostLeft");
+        }
       }
     });
+  }
+
+  function startMatch() {
+    if (role === "host" && room) {
+      room.child("status").set("playing");
+    }
   }
 
   function sendProgress(idx, score, done, correct, seq) {
     if (!room) return;
-    room.child(role).update({
+    room.child("players/" + pid).update({
       idx: idx,
       score: score,
       done: !!done,
@@ -242,33 +252,44 @@
   }
 
   function rematch() {
-    if (!room) return;
-    room.child("rematch/" + role).set(true);
-    emit("waitingRematch");
-  }
-
-  function doRematch() {
-    if (!room) return;
-    started = false;
-    oppLeftFired = false;
+    if (!room || role !== "host") return;
     var qs = questionGen ? questionGen() : null;
     if (!qs) {
       emit("error", "Could not generate a new quiz.");
       return;
     }
-    room.update({
-      status: "playing",
-      questions: qs,
-      qv: (qv || 1) + 1,
-      rematch: null,
-      host: blankPlayer(),
-      guest: blankPlayer(),
+    var v = null;
+    room.once("value").then(function (snap) {
+      v = snap.val();
+      if (!v) return;
+      var reset = {};
+      Object.keys(v.players || {}).forEach(function (k) {
+        var p = v.players[k];
+        if (!p.connected) return;
+        reset[k] = {
+          name: p.name,
+          connected: true,
+          idx: 0,
+          score: 0,
+          done: false,
+          correct: 0,
+          seq: 0,
+          joinedAt: p.joinedAt || 0,
+        };
+      });
+      room.update({
+        status: "lobby",
+        questions: qs,
+        qv: (v.qv || 1) + 1,
+        players: reset,
+      });
+      emit("backToLobby");
     });
   }
 
   function leave() {
-    if (room && role) {
-      room.child(role + "/connected").set(false);
+    if (room && pid) {
+      room.child("players/" + pid + "/connected").set(false);
     }
     detach();
     room = null;
@@ -281,6 +302,7 @@
     configured: configured,
     createRoom: createRoom,
     joinRoom: joinRoom,
+    startMatch: startMatch,
     sendProgress: sendProgress,
     rematch: rematch,
     setQuestionGenerator: setQuestionGenerator,
@@ -288,5 +310,9 @@
     role: function () {
       return role;
     },
+    me: function () {
+      return pid;
+    },
+    MAX_PLAYERS: MAX_PLAYERS,
   };
 })();
