@@ -1017,6 +1017,78 @@ h2 { font-weight: 800; letter-spacing: -0.01em; }
   box-shadow: 0 4px 14px rgba(200, 80, 200, 0.4);
 }
 
+/* ===== Mobile / touch optimization ===== */
+
+/* no text selection on game controls */
+button,
+.answer-btn,
+.select,
+.menu-toggle {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* hover effects only for real pointers (no sticky hover on touch) */
+@media (hover: none) {
+  .menu-toggle:hover,
+  .theme-toggle:hover,
+  .icon-toggle:hover,
+  .chip-icon:hover,
+  .diff-btn:hover,
+  .option-toggle:hover,
+  .guide-item:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .answer-btn:not(:disabled):hover,
+  .menu-close:hover {
+    transform: none;
+    filter: none;
+  }
+}
+
+/* lighter GPU load on phones */
+@media (max-width: 600px) {
+  .blobs span { filter: blur(38px); }
+  .blobs span:nth-child(3) { display: none; }
+
+  /* keep header in one compact row */
+  .header-inner {
+    flex-direction: row;
+    padding: 8px 0;
+    gap: 8px;
+  }
+  .header-left { gap: 8px; }
+  .logo { font-size: 1rem; }
+  .menu-toggle { width: 38px; height: 38px; }
+  .theme-toggle, .icon-toggle { width: 38px; height: 38px; margin-left: 6px; font-size: 1rem; }
+
+  /* mode + difficulty buttons: comfortable but compact */
+  .difficulty-toggle { gap: 8px; }
+  .diff-btn { min-height: 46px; font-size: 0.88rem; padding: 8px 6px; }
+  .mode-btn { font-size: 0.84rem; }
+
+  /* quiz meta: tighter chips */
+  .quiz-meta { gap: 6px; row-gap: 6px; font-size: 0.8rem; }
+  .badge { padding: 3px 10px; font-size: 0.74rem; }
+  #quiz-bot { width: 30px; height: 30px; }
+  .streak-chip, .rival-chip, .quiz-timer { font-size: 0.74rem; padding: 3px 10px; }
+
+  .count-info { font-size: 0.84rem; }
+  .option-toggle { width: 100%; text-align: center; }
+
+  .online-input { width: 132px; min-height: 46px; font-size: 16px; }
+
+  .duel-pts { font-size: 1.7rem; }
+  .duel-scoreboard { padding: 14px 8px; gap: 8px; }
+
+  .cookie-banner {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .footer {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* ===== Keyframes ===== */
 @keyframes bootIn {
   from { opacity: 0; transform: translateY(18px) scale(0.985); }
